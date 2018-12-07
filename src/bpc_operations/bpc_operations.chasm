@@ -1,0 +1,26 @@
+; BPC operations validation script
+
+handler EVENT_DEFAULT {
+    one                             ; non-zero return code -> invalid
+}
+
+
+handler EVENT_CHANGEVALIDATION {
+    call TwoSigs
+}
+
+; EVENT_SIDECHAINTX, but that constant isn't yet defined
+handler 17 {
+    call TwoSigs
+}
+
+func TwoSigs(1) {
+    ; only item on stack will be the sigs bitmask
+    count1s ; nsigs
+    push 2  ; nsigs 2
+    lt      ; (nsigs < 2)
+            ; if nsigs < 2, this is TRUE,
+            ;    which is 1, which as a return code
+            ;    indicates an invalid tx
+            ; if nsigs >= 2, this is FALSE => 0 => OK
+}
