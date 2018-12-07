@@ -1,0 +1,6 @@
+# chaincode tooling
+chasm
+chfmt
+
+# chaincode binaries
+**/*.chbin
