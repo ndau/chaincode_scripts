@@ -59,6 +59,32 @@ handler EVENT_RELEASEFROMENDOWMENT {
     call CheckMask  ; ... returncode
 }
 
+handler EVENT_TRANSFER {
+    call TransferHandler
+}
+
+handler EVENT_TRANSFERANDLOCK {
+    call TransferHandler
+}
+
+func TransferHandler(2) {
+                    ; ... tx sigs
+    swap            ; sigs tx
+    field TX_QUANTITY   ; sigs qty
+    push 20000      ; sigs qty 20000
+    lte             ; sigs (qty <= 20000)
+    ifnz
+        push 0x3    ; qty sigs 0b0011
+        one         ; qty sigs 0b0011 1
+        call CheckMask  ; ... returncode
+        ret
+    endif
+
+    ; past this point, qty > 20000
+                    ; sigs
+    call LowPairsOneEach
+}
+
 func LowPairsOneEach(1) {
                     ; sigs
     push 0xc        ; sigs 0b1100
