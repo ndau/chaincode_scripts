@@ -1,0 +1,227 @@
+; this script is for sales by ntrd at the ndau target price.
+
+; specs are as follows:
+; Permitted Transactions: ChangeValidation, ReleaseFromEndowment, Transfer, TransferAndLock
+; Validation Keys: 4 ntrd Keys plus 3 pre-BPC Keys
+; Validation Rules:
+;   ChangeValidation: 1 of first 2 ntrd signatures and 1 of second 2 ntrd signatures, or 2 pre-BPC signatures
+;   ReleaseFromEndowment:
+;   - Up to 5,000 ndau: 1 of first 2 ntrd signatures
+;   - 5,000 - 20,000 ndau: 1 of first 2 ntrd signatures and 1 of second 2 ntrd signatures
+;   - More than 20,000 ndau: 1 of first 2 ntrd signatures and 1 of second 2 ntrd signatures and 1 of pre-BPC
+;   Transfer and TransferAndLock:
+;   - Up to 20,000 ndau: 1 of first 2 ntrd signatures
+;   - More than 20,000 ndau: 1 of first 2 ntrd signatures and 1 of second 2 ntrd signatures
+
+; validation key ordering:
+; 0 - ntrd Group A, Sig a
+; 1 - ntrd Group A, Sig b
+; 2 - ntrd Group B, Sig a
+; 3 - ntrd Group B, Sig b
+; 4 - pre-bpc A
+; 5 - pre-bpc B
+; 6 - pre-bpc C
+
+; For ChangeValidation, the rule is:
+; (count(GroupA) >= 1 AND count(GroupB) >= 1) OR (count(BPC) >= 2)
+; We start with the bpc because that lets us early-exit on the AND clause.
+; We do an explicit count and gte, even for the 1s cases, because we expect that we may want to
+; change the number of signatures someday.
+;
+; Expected arguments on the stack in order from bottom to top are:
+;    account
+;    transaction
+;    bitmask of which authorized keys were found in the signature list
+handler EVENT_CHANGEVALIDATION {
+    ; bitmasks for signature groups
+    NTRD_GROUPA_MASK = 0x03
+    NTRD_GROUPB_MASK = 0x0C
+    BPC_MASK = 0x70
+
+    ; number of sigs required
+    GROUPA_MIN = 1
+    GROUPB_MIN = 1
+    BPC_MIN = 2
+
+                                    ; stack top on right -- sig bitmask on top, then tx, then account
+                                    ;acct tx bm
+                                    ; we never use acct or tx, so let's just get rid of 'em
+    tuck 2                          ;bm acct tx
+    drop2                           ;bm
+
+    push BPC_MASK                   ;bm bpcmask
+    push BPC_MIN                    ;bm bpcmask bpcmin
+    call enough_sigs                ;bm bpcmask bpcmin enuf
+    ifnz                            ;bm bpcmask bpcmin
+        true                        ;bm bpcmask bpcmin true
+        ret                         ; success -- there were >=2 bpc sigs, so it's valid
+    endif                           ;not enough bpc, so look for ntrd sigs
+
+                                    ;bm bpcmask bpcmin
+    drop2                           ;bm
+    push NTRD_GROUPA_MASK           ;bm grpamask
+    push GROUPA_MIN                 ;bm grpamask grpamin
+    call enough_sigs                ;bm grpamask grpamin enuf
+    ifz                             ;bm grpamask grpamin
+        fail                        ; not enough grpa sigs
+    endif
+                                    ;bm grpamask grpamin
+    drop2                           ;bm
+    push NTRD_GROUPA_MASK           ;bm grpbmask
+    push GROUPA_MIN                 ;bm grpbmask grpbmin
+    call enough_sigs                ;bm grpbmask grpbmin enuf
+    ret                             ; if true, then valid, if false, invalid
+}
+
+
+; For ReleaseFromEndowment (RFE), the rule is:
+; * we always need 1 of groupA
+; * amt > 5000, also need 1 of groupB
+; * amt > 20000, also need 1 of pre-BPC
+; We do an explicit count and gte, even for the 1s cases, because we expect that we may want to
+; change the number of signatures someday.
+;
+; Expected arguments on the stack in order from bottom to top are:
+;    account
+;    transaction
+;    bitmask of which authorized keys were found in the signature list
+handler EVENT_RELEASEFROMENDOWMENT {
+    ; bitmasks for signature groups
+    NTRD_GROUPA_MASK = 0x03
+    NTRD_GROUPB_MASK = 0x0C
+    BPC_MASK = 0x70
+
+    ; number of sigs required
+    GROUPA_MIN = 1
+    GROUPB_MIN = 1
+    BPC_MIN = 1
+
+    ; breakpoints for decisions
+    LOW_LIMIT = 5000
+    HIGH_LIMIT = 20000
+                                    ; stack top on right -- sig bitmask on top, then tx, then account
+                                    ; get rid of acct since we don't need to look at it
+                                    ;acct tx bm
+    roll 2                          ;tx bm acct
+    drop                            ;tx bm
+
+                                    ; check that we have at least GROUPA_MIN of groupA
+                                    ;tx bm
+    push NTRD_GROUPA_MASK           ;tx bm grpamask
+    push GROUPA_MIN                 ;tx bm grpamask grpamin
+    call enough_sigs                ;tx bm grpamask grpamin enuf
+    ifz                             ;tx bm grpamask grpamin
+        fail                        ; not enough grpa sigs
+    endif
+    drop2                           ;tx bm
+
+                                    ; if amt <= LOW_LIMIT, we're done
+                                    ;tx bm
+    pick 1                          ;tx bm tx
+    field TX_QUANTITY               ;tx bm amt
+    push LOW_LIMIT                  ;tx bm amt LOW_LIMIT
+    lte                             ;tx bm (amt < LOW_LIMIT)
+    ifz
+        true                        ; we're under the limit, so we're done
+        ret
+    endif
+
+                                    ; check that we have at least GROUPB_MIN of groupA
+                                    ;tx bm
+    push NTRD_GROUPB_MASK           ;tx bm grpbmask
+    push GROUPB_MIN                 ;tx bm grpbmask grpbmin
+    call enough_sigs                ;tx bm grpbmask grpbmin enuf
+    ifz                             ;tx bm grpbmask grpbmin
+        fail                        ; not enough grpb sigs
+    endif
+    drop2                           ;tx bm
+
+                                    ; if amt <= HIGH_LIMIT, we're done
+                                    ;tx bm
+    swap                            ;bm tx
+    field TX_QUANTITY               ;bm amt
+    push HIGH_LIMIT                 ;bm amt HIGH_LIMIT
+    lte                             ;bm (amt < HIGH_LIMIT)
+    ifz
+        true                        ; we're under the limit, so we're done
+        ret
+    endif
+
+                                    ; it's a big amount, look for a bpc sig
+                                    ;bm
+    push BPC_MASK                   ;bm bpcmask
+    push BPC_MIN                    ;bm bpcmask bpcmin
+    call enough_sigs                ;bm bpcmask bpcmin enuf
+    ret                             ; if true, then valid, if false, invalid
+}
+
+;   Transfer and TransferAndLock:
+;   - Up to 20,000 ndau: 1 of first 2 ntrd signatures
+;   - More than 20,000 ndau: 1 of first 2 ntrd signatures and 1 of second 2 ntrd signatures
+
+
+; For EventTransfer, the rule is:
+; * we always need 1 of groupA
+; * amt > 20000, also need 1 of groupB
+;
+; Expected arguments on the stack in order from bottom to top are:
+;    account
+;    transaction
+;    bitmask of which authorized keys were found in the signature list
+handler EVENT_TRANSFER, EVENT_TRANSFERANDLOCK {
+    ; bitmasks for signature groups
+    NTRD_GROUPA_MASK = 0x03
+    NTRD_GROUPB_MASK = 0x0C
+
+    ; number of sigs required
+    GROUPA_MIN = 1
+    GROUPB_MIN = 1
+
+    ; breakpoints for decisions
+    HIGH_LIMIT = 20000
+                                    ; stack top on right -- sig bitmask on top, then tx, then account
+                                    ; get rid of acct since we don't need to look at it
+                                    ;acct tx bm
+    roll 2                          ;tx bm acct
+    drop                            ;tx bm
+
+                                    ; check that we have at least GROUPA_MIN of groupA
+                                    ;tx bm
+    push NTRD_GROUPA_MASK           ;tx bm grpamask
+    push GROUPA_MIN                 ;tx bm grpamask grpamin
+    call enough_sigs                ;tx bm grpamask grpamin enuf
+    ifz                             ;tx bm grpamask grpamin
+        fail                        ; not enough grpa sigs
+    endif
+    drop2                           ;tx bm
+
+                                    ; if amt <= HIGH_LIMIT, we're done
+                                    ;tx bm
+    swap                            ;bm tx
+    field TX_QUANTITY               ;bm amt
+    push HIGH_LIMIT                 ;bm amt HIGH_LIMIT
+    lte                             ;bm (amt < HIGH_LIMIT)
+    ifz
+        true                        ; we're under the limit, so we're done
+        ret
+    endif
+
+                                    ; it's a big amount, look for a sig from grpb
+                                    ;bm
+    push NTRD_GROUPB_MASK           ;bm grpbmask
+    push GROUPB_MIN                 ;bm grpbmask grpbmin
+    call enough_sigs                ;bm grpbmask grpbmin enuf
+    ret                             ; if true, then valid, if false, invalid
+}
+
+
+; enough_sigs expects to find a bitmask of signature indices found,
+; a mask with the bits of which ones to consider, and a minimum number that must be set
+; returns either true or false
+func enough_sigs(2) {
+                                    ;bm countmask required
+    tuck 2                          ;required bm countmask
+    and                             ;required bm_to_consider
+    count1s                         ;required num_found
+    lte                             ;(num_found >= required)
+}
