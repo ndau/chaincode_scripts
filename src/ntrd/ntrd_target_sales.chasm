@@ -49,32 +49,32 @@ handler EVENT_CHANGEVALIDATION {
     BPC_MIN = 2
 
                                     ; stack top on right -- sig bitmask on top, then tx, then account
-                                    ;acct tx bm
+                                    ;acct tx sigs
                                     ; we never use acct or tx, so let's just get rid of 'em
-    tuck 2                          ;bm acct tx
-    drop2                           ;bm
+    tuck 2                          ;sigs acct tx
+    drop2                           ;sigs
 
-    push BPC_MASK                   ;bm bpcmask
-    push BPC_MIN                    ;bm bpcmask bpcmin
-    call enough_sigs                ;bm bpcmask bpcmin enuf
-    ifnz                            ;bm bpcmask bpcmin
-        zero                        ;bm bpcmask bpcmin zero
+    push BPC_MASK                   ;sigs bpcmask
+    push BPC_MIN                    ;sigs bpcmask bpcmin
+    call enough_sigs                ;sigs bpcmask bpcmin enuf
+    ifnz                            ;sigs bpcmask bpcmin
+        zero                        ;sigs bpcmask bpcmin zero
         ret                         ; zero is success -- >=2 bpc sigs, so it's valid
     endif                           ;not enough bpc, so look for ntrd sigs
 
-                                    ;bm bpcmask bpcmin
-    drop2                           ;bm
-    push NTRD_GROUPA_MASK           ;bm grpamask
-    push GROUPA_MIN                 ;bm grpamask grpamin
-    call enough_sigs                ;bm grpamask grpamin enuf
-    ifz                             ;bm grpamask grpamin
+                                    ;sigs bpcmask bpcmin
+    drop2                           ;sigs
+    push NTRD_GROUPA_MASK           ;sigs grpamask
+    push GROUPA_MIN                 ;sigs grpamask grpamin
+    call enough_sigs                ;sigs grpamask grpamin enuf
+    ifz                             ;sigs grpamask grpamin
         fail                        ; not enough grpa sigs
     endif
-                                    ;bm grpamask grpamin
-    drop2                           ;bm
-    push NTRD_GROUPA_MASK           ;bm grpbmask
-    push GROUPA_MIN                 ;bm grpbmask grpbmin
-    call enough_sigs                ;bm grpbmask grpbmin enuf
+                                    ;sigs grpamask grpamin
+    drop2                           ;sigs
+    push NTRD_GROUPA_MASK           ;sigs grpbmask
+    push GROUPA_MIN                 ;sigs grpbmask grpbmin
+    call enough_sigs                ;sigs grpbmask grpbmin enuf
     not                             ; a successful return is 0
 }
 
@@ -106,57 +106,57 @@ handler EVENT_RELEASEFROMENDOWMENT {
     HIGH_LIMIT = 20000
                                     ; stack top on right -- sig bitmask on top, then tx, then account
                                     ; get rid of acct since we don't need to look at it
-                                    ;acct tx bm
-    roll 2                          ;tx bm acct
-    drop                            ;tx bm
+                                    ;acct tx sigs
+    roll 2                          ;tx sigs acct
+    drop                            ;tx sigs
 
                                     ; check that we have at least GROUPA_MIN of groupA
-                                    ;tx bm
-    push NTRD_GROUPA_MASK           ;tx bm grpamask
-    push GROUPA_MIN                 ;tx bm grpamask grpamin
-    call enough_sigs                ;tx bm grpamask grpamin enuf
-    ifz                             ;tx bm grpamask grpamin
+                                    ;tx sigs
+    push NTRD_GROUPA_MASK           ;tx sigs grpamask
+    push GROUPA_MIN                 ;tx sigs grpamask grpamin
+    call enough_sigs                ;tx sigs grpamask grpamin enuf
+    ifz                             ;tx sigs grpamask grpamin
         fail                        ; not enough grpa sigs
     endif
-    drop2                           ;tx bm
+    drop2                           ;tx sigs
 
                                     ; if amt <= LOW_LIMIT, we're done
-                                    ;tx bm
-    pick 1                          ;tx bm tx
-    field TX_QUANTITY               ;tx bm amt
-    push LOW_LIMIT                  ;tx bm amt LOW_LIMIT
-    lte                             ;tx bm (amt < LOW_LIMIT)
+                                    ;tx sigs
+    pick 1                          ;tx sigs tx
+    field TX_QUANTITY               ;tx sigs amt
+    push LOW_LIMIT                  ;tx sigs amt LOW_LIMIT
+    lte                             ;tx sigs (amt < LOW_LIMIT)
     ifz
         zero                        ; we're under the limit, so succeed
         ret
     endif
 
                                     ; check that we have at least GROUPB_MIN of groupA
-                                    ;tx bm
-    push NTRD_GROUPB_MASK           ;tx bm grpbmask
-    push GROUPB_MIN                 ;tx bm grpbmask grpbmin
-    call enough_sigs                ;tx bm grpbmask grpbmin enuf
-    ifz                             ;tx bm grpbmask grpbmin
+                                    ;tx sigs
+    push NTRD_GROUPB_MASK           ;tx sigs grpbmask
+    push GROUPB_MIN                 ;tx sigs grpbmask grpbmin
+    call enough_sigs                ;tx sigs grpbmask grpbmin enuf
+    ifz                             ;tx sigs grpbmask grpbmin
         fail                        ; not enough grpb sigs
     endif
-    drop2                           ;tx bm
+    drop2                           ;tx sigs
 
                                     ; if amt <= HIGH_LIMIT, we're done
-                                    ;tx bm
-    swap                            ;bm tx
-    field TX_QUANTITY               ;bm amt
-    push HIGH_LIMIT                 ;bm amt HIGH_LIMIT
-    lte                             ;bm (amt < HIGH_LIMIT)
+                                    ;tx sigs
+    swap                            ;sigs tx
+    field TX_QUANTITY               ;sigs amt
+    push HIGH_LIMIT                 ;sigs amt HIGH_LIMIT
+    lte                             ;sigs (amt < HIGH_LIMIT)
     ifz
         zero                        ; we're under the limit, so we're done
         ret
     endif
 
                                     ; it's a big amount, look for a bpc sig
-                                    ;bm
-    push BPC_MASK                   ;bm bpcmask
-    push BPC_MIN                    ;bm bpcmask bpcmin
-    call enough_sigs                ;bm bpcmask bpcmin enuf
+                                    ;sigs
+    push BPC_MASK                   ;sigs bpcmask
+    push BPC_MIN                    ;sigs bpcmask bpcmin
+    call enough_sigs                ;sigs bpcmask bpcmin enuf
     not                             ; if true, then valid, if false, invalid
 }
 
@@ -186,36 +186,36 @@ handler EVENT_TRANSFER, EVENT_TRANSFERANDLOCK {
     HIGH_LIMIT = 20000
                                     ; stack top on right -- sig bitmask on top, then tx, then account
                                     ; get rid of acct since we don't need to look at it
-                                    ;acct tx bm
-    roll 2                          ;tx bm acct
-    drop                            ;tx bm
+                                    ;acct tx sigs
+    roll 2                          ;tx sigs acct
+    drop                            ;tx sigs
 
                                     ; check that we have at least GROUPA_MIN of groupA
-                                    ;tx bm
-    push NTRD_GROUPA_MASK           ;tx bm grpamask
-    push GROUPA_MIN                 ;tx bm grpamask grpamin
-    call enough_sigs                ;tx bm grpamask grpamin enuf
-    ifz                             ;tx bm grpamask grpamin
+                                    ;tx sigs
+    push NTRD_GROUPA_MASK           ;tx sigs grpamask
+    push GROUPA_MIN                 ;tx sigs grpamask grpamin
+    call enough_sigs                ;tx sigs grpamask grpamin enuf
+    ifz                             ;tx sigs grpamask grpamin
         fail                        ; not enough grpa sigs
     endif
-    drop2                           ;tx bm
+    drop2                           ;tx sigs
 
                                     ; if amt <= HIGH_LIMIT, we're done
-                                    ;tx bm
-    swap                            ;bm tx
-    field TX_QUANTITY               ;bm amt
-    push HIGH_LIMIT                 ;bm amt HIGH_LIMIT
-    lte                             ;bm (amt < HIGH_LIMIT)
+                                    ;tx sigs
+    swap                            ;sigs tx
+    field TX_QUANTITY               ;sigs amt
+    push HIGH_LIMIT                 ;sigs amt HIGH_LIMIT
+    lte                             ;sigs (amt < HIGH_LIMIT)
     ifz
         zero                        ; we're under the limit, so we're done
         ret
     endif
 
                                     ; it's a big amount, look for a sig from grpb
-                                    ;bm
-    push NTRD_GROUPB_MASK           ;bm grpbmask
-    push GROUPB_MIN                 ;bm grpbmask grpbmin
-    call enough_sigs                ;bm grpbmask grpbmin enuf
+                                    ;sigs
+    push NTRD_GROUPB_MASK           ;sigs grpbmask
+    push GROUPB_MIN                 ;sigs grpbmask grpbmin
+    call enough_sigs                ;sigs grpbmask grpbmin enuf
     not                             ; if enough_sigs was true, then succeed
 }
 
@@ -224,9 +224,9 @@ handler EVENT_TRANSFER, EVENT_TRANSFERANDLOCK {
 ; a mask with the bits of which ones to consider, and a minimum number that must be set
 ; returns either true or false
 func enough_sigs(2) {
-                                    ;bm countmask required
-    tuck 2                          ;required bm countmask
-    and                             ;required bm_to_consider
+                                    ;sigs countmask required
+    tuck 2                          ;required sigs countmask
+    and                             ;required sigs_to_consider
     count1s                         ;required num_found
     lte                             ;(num_found >= required)
 }
