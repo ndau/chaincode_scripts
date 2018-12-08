@@ -1,26 +1,34 @@
 ; BPC operations validation script
+; # BPC Operations
+;
+; - Permitted Transactions: ChangeValidation, SidechainTx, Chaos Chain Update
+; - Validation Keys: 3 pre-BPC Keys
+; - Validation Rules:
+;     - ChangeValidation: 2 signatures
+;     - SidechainTx: 2 signatures
+;     - Chaos Chain Update: 2 signatures
 
 handler EVENT_DEFAULT {
-    one                             ; non-zero return code -> invalid
+    fail                            ; allow nothing we haven't explicitly permitted
 }
 
-
 handler EVENT_CHANGEVALIDATION {
-    call TwoSigs
+    call EnoughSigs
+    not                             ; 0 is a good return
 }
 
 ; EVENT_SIDECHAINTX, but that constant isn't yet defined
 handler 17 {
-    call TwoSigs
+    call EnoughSigs
+    not                             ; 0 is a good return
 }
 
-func TwoSigs(1) {
-    ; only item on stack will be the sigs bitmask
-    count1s ; nsigs
-    push 2  ; nsigs 2
-    lt      ; (nsigs < 2)
-            ; if nsigs < 2, this is TRUE,
-            ;    which is 1, which as a return code
-            ;    indicates an invalid tx
-            ; if nsigs >= 2, this is FALSE => 0 => OK
+; EnoughSigs returns true if there are enough sigs
+func EnoughSigs(1) {
+    MIN_SIGS = 2
+
+                                    ; only item on stack will be the sigs bitmask
+    count1s                         ; nsigs
+    push MIN_SIGS                   ; nsigs minsigs
+    gte                             ; (nsigs >= minsigs)
 }

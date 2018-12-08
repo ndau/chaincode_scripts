@@ -15,7 +15,6 @@ Universal context for validation scripts:
 
 - `acct`: a struct representing the "source" account associated with the transaction. For transactions associated with more than one account, this is always the account which pays the transaction fee.
 
-
 - `tx`: a struct representing the transaction in question.
 
 - `sigs`: a bitmask of signatures for this transaction. The bits of the bitmask are mapped to the validation signatures of the account such that when the public key at index `0` of the validation keys verifies one of the signatures in the signature set, bit `0` of the bitmask is set, and so on for all other keys.
@@ -25,3 +24,13 @@ Universal context for validation scripts:
 The `ReleaseFromEndowment` transaction has some special handling. The top of the RFE stack is identical to the standard context, but it has an additional field appended to the bottom::
 
 - `dest`: a struct representing the destination account into which this RFE will release funds.
+
+# Coding Conventions
+
+* Code should be run through chfmt
+* Functions should use CamelCase
+* Constants should be named, and constant names should be UPPERCASE
+* opcodes are in lowercase
+* when explicitly failing a validation script, use the fail opcode
+* remember that numeric zero is a good return and anything else is a failure
+* to return the result of a conditional, use not instead of a conditional
