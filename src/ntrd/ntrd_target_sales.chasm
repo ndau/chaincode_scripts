@@ -22,6 +22,11 @@
 ; 5 - pre-bpc B
 ; 6 - pre-bpc C
 
+; we don't want any event we haven't specifically handled
+handler EVENT_DEFAULT {
+    fail
+}
+
 ; For ChangeValidation, the rule is:
 ; (count(GroupA) >= 1 AND count(GroupB) >= 1) OR (count(BPC) >= 2)
 ; We start with the bpc because that lets us early-exit on the AND clause.
@@ -33,12 +38,12 @@
 ;    transaction
 ;    bitmask of which authorized keys were found in the signature list
 handler EVENT_CHANGEVALIDATION {
-    ; bitmasks for signature groups
+                                    ; bitmasks for signature groups
     NTRD_GROUPA_MASK = 0x03
     NTRD_GROUPB_MASK = 0x0C
     BPC_MASK = 0x70
 
-    ; number of sigs required
+                                    ; number of sigs required
     GROUPA_MIN = 1
     GROUPB_MIN = 1
     BPC_MIN = 2
@@ -53,8 +58,8 @@ handler EVENT_CHANGEVALIDATION {
     push BPC_MIN                    ;bm bpcmask bpcmin
     call enough_sigs                ;bm bpcmask bpcmin enuf
     ifnz                            ;bm bpcmask bpcmin
-        true                        ;bm bpcmask bpcmin true
-        ret                         ; success -- there were >=2 bpc sigs, so it's valid
+        zero                        ;bm bpcmask bpcmin zero
+        ret                         ; zero is success -- >=2 bpc sigs, so it's valid
     endif                           ;not enough bpc, so look for ntrd sigs
 
                                     ;bm bpcmask bpcmin
@@ -70,7 +75,7 @@ handler EVENT_CHANGEVALIDATION {
     push NTRD_GROUPA_MASK           ;bm grpbmask
     push GROUPA_MIN                 ;bm grpbmask grpbmin
     call enough_sigs                ;bm grpbmask grpbmin enuf
-    ret                             ; if true, then valid, if false, invalid
+    not                             ; a successful return is 0
 }
 
 
@@ -86,17 +91,17 @@ handler EVENT_CHANGEVALIDATION {
 ;    transaction
 ;    bitmask of which authorized keys were found in the signature list
 handler EVENT_RELEASEFROMENDOWMENT {
-    ; bitmasks for signature groups
+                                    ; bitmasks for signature groups
     NTRD_GROUPA_MASK = 0x03
     NTRD_GROUPB_MASK = 0x0C
     BPC_MASK = 0x70
 
-    ; number of sigs required
+                                    ; number of sigs required
     GROUPA_MIN = 1
     GROUPB_MIN = 1
     BPC_MIN = 1
 
-    ; breakpoints for decisions
+                                    ; breakpoints for decisions
     LOW_LIMIT = 5000
     HIGH_LIMIT = 20000
                                     ; stack top on right -- sig bitmask on top, then tx, then account
@@ -122,7 +127,7 @@ handler EVENT_RELEASEFROMENDOWMENT {
     push LOW_LIMIT                  ;tx bm amt LOW_LIMIT
     lte                             ;tx bm (amt < LOW_LIMIT)
     ifz
-        true                        ; we're under the limit, so we're done
+        zero                        ; we're under the limit, so succeed
         ret
     endif
 
@@ -143,7 +148,7 @@ handler EVENT_RELEASEFROMENDOWMENT {
     push HIGH_LIMIT                 ;bm amt HIGH_LIMIT
     lte                             ;bm (amt < HIGH_LIMIT)
     ifz
-        true                        ; we're under the limit, so we're done
+        zero                        ; we're under the limit, so we're done
         ret
     endif
 
@@ -152,7 +157,7 @@ handler EVENT_RELEASEFROMENDOWMENT {
     push BPC_MASK                   ;bm bpcmask
     push BPC_MIN                    ;bm bpcmask bpcmin
     call enough_sigs                ;bm bpcmask bpcmin enuf
-    ret                             ; if true, then valid, if false, invalid
+    not                             ; if true, then valid, if false, invalid
 }
 
 ;   Transfer and TransferAndLock:
@@ -169,15 +174,15 @@ handler EVENT_RELEASEFROMENDOWMENT {
 ;    transaction
 ;    bitmask of which authorized keys were found in the signature list
 handler EVENT_TRANSFER, EVENT_TRANSFERANDLOCK {
-    ; bitmasks for signature groups
+                                    ; bitmasks for signature groups
     NTRD_GROUPA_MASK = 0x03
     NTRD_GROUPB_MASK = 0x0C
 
-    ; number of sigs required
+                                    ; number of sigs required
     GROUPA_MIN = 1
     GROUPB_MIN = 1
 
-    ; breakpoints for decisions
+                                    ; breakpoints for decisions
     HIGH_LIMIT = 20000
                                     ; stack top on right -- sig bitmask on top, then tx, then account
                                     ; get rid of acct since we don't need to look at it
@@ -202,7 +207,7 @@ handler EVENT_TRANSFER, EVENT_TRANSFERANDLOCK {
     push HIGH_LIMIT                 ;bm amt HIGH_LIMIT
     lte                             ;bm (amt < HIGH_LIMIT)
     ifz
-        true                        ; we're under the limit, so we're done
+        zero                        ; we're under the limit, so we're done
         ret
     endif
 
@@ -211,7 +216,7 @@ handler EVENT_TRANSFER, EVENT_TRANSFERANDLOCK {
     push NTRD_GROUPB_MASK           ;bm grpbmask
     push GROUPB_MIN                 ;bm grpbmask grpbmin
     call enough_sigs                ;bm grpbmask grpbmin enuf
-    ret                             ; if true, then valid, if false, invalid
+    not                             ; if enough_sigs was true, then succeed
 }
 
 
