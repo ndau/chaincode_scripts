@@ -1,0 +1,23 @@
+; plurality calculation -- requires 2/3 of all keys or more to sign
+;
+; if 6 signatures exist on an account, and 4 sign, this succeeds
+;
+; Expected arguments on the stack in order from bottom to top are:
+;    account
+;    transaction
+;    bitmask of which authorized keys were found in the signature list
+
+handler EVENT_DEFAULT {
+                                    ; stack top on right -- sig bitmask on top, then tx, then account
+                                    ;acct tx bm
+    count1s                         ;acct tx nsigs
+    roll 2                          ;tx nsigs acct
+    field ACCT_VALIDATIONKEYS       ;tx nsigs [keys]
+    len                             ;tx nsigs nkeys
+    dup                             ;tx nsigs nkeys nkeys
+    add                             ; tx nsigs (2*nkeys)
+    swap                            ;tx (2*nkeys) nsigs
+    push 3                          ;tx (2*nkeys) nsigs 3
+    mul                             ;tx (2*nkeys) (3*nsigs)
+    lt                              ;tx (true (fail) if (2*nkeys) < (3*nsigs)
+}
