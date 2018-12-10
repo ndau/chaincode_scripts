@@ -1,4 +1,6 @@
-# ntrd Target Price sales
+# ntrd
+
+## Target Price sales
 
 - Permitted Transactions: ChangeValidation, ReleaseFromEndowment, Transfer, TransferAndLock
 - Validation Keys: 4 ntrd Keys (indices `0`-`3`) plus 3 pre-BPC Keys (`4`-`6`)
@@ -12,3 +14,11 @@
     - Transfer and TransferAndLock:
         - Up to 20,000 ndau: 1 of first 2 ntrd signatures
         - More than 20,000 ndau: 1 of first 2 ntrd signatures and 1 of second 2 ntrd signatures
+
+## Operations
+
+- Permitted Transactions: All except Delegate and Lock
+- Validation Keys: 4 ntrd Keys
+- Validation Rules:
+    - ChangeValidation: 1 of first 2 signatures and 1 of second 2 signatures
+    - All others: 1 signature
