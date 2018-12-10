@@ -1,0 +1,24 @@
+handler EVENT_DEFAULT {
+    zero    ; chaincode can Just Succeed, here, because
+            ; we validate that at least one signature
+            ; is valid
+}
+
+handler EVENT_CHANGEVALIDATION {
+                ; ... sigs
+    dup         ; sigs sigs
+    one         ; sigs sigs 1
+    and         ; sigs first_sig
+    ifz
+        fail
+    endif
+
+    swap        ; sigs
+    push 0x6    ; sigs 0b0110
+    and         ; second_two_sigs
+    count1s     ; nsecond_sigs
+    one         ; nsecond_sigs 1
+    lte         ; (nsecond_sigs <= 1)
+                ; if true, fail
+                ; if false, succeed
+}
