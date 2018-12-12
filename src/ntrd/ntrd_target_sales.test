@@ -1,0 +1,8 @@
+; validation scripts expect an account, a tx, and a bitmask
+; first let's try a EVENT_CHANGEVALIDATION that should work
+; with 1 of each of first two signature sets
+push 0
+push { TX_QUANTITY: 100 }
+push 5
+event EVENT_CHANGEVALIDATION
+run succeed

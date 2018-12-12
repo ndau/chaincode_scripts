@@ -223,7 +223,7 @@ handler EVENT_TRANSFER, EVENT_TRANSFERANDLOCK {
 ; EnoughSigs expects to find a bitmask of signature indices found,
 ; a mask with the bits of which ones to consider, and a minimum number that must be set
 ; returns either true or false
-func EnoughSigs(2) {
+func EnoughSigs(3) {
                                     ;sigs countmask required
     tuck 2                          ;required sigs countmask
     and                             ;required sigs_to_consider
