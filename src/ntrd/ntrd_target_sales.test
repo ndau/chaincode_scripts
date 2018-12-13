@@ -1,4 +1,7 @@
 ; validation scripts expect an account, a tx, and a bitmask
+; but if our script doesn't inspect them (and this one doesn't)
+; we can just push a 0 rather than an account record
+
 ; first let's try a EVENT_CHANGEVALIDATION that should work
 ; with 1 of each of first two signature sets
 push 0
@@ -6,3 +9,22 @@ push { TX_QUANTITY: 100 }
 push 5
 event EVENT_CHANGEVALIDATION
 run succeed
+
+clear
+; now do the same for 2 bpc sigs
+push 0
+push { TX_QUANTITY: 100 }
+push 96  ; 0x60
+event EVENT_CHANGEVALIDATION
+run succeed
+
+clear
+; now expect a failure for 1 ntrd and 1 bpc
+push 0
+push { TX_QUANTITY: 100 }
+push 34 ; 0x22
+event EVENT_CHANGEVALIDATION
+run fail
+
+; all done, get out of here
+quit
