@@ -72,8 +72,8 @@ handler EVENT_CHANGEVALIDATION {
     endif
                                     ;sigs grpamask grpamin
     drop2                           ;sigs
-    push NTRD_GROUPA_MASK           ;sigs grpbmask
-    push GROUPA_MIN                 ;sigs grpbmask grpbmin
+    push NTRD_GROUPB_MASK           ;sigs grpbmask
+    push GROUPB_MIN                 ;sigs grpbmask grpbmin
     call EnoughSigs                 ;sigs grpbmask grpbmin enuf
     not                             ; a successful return is 0
 }
