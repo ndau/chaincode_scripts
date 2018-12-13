@@ -102,8 +102,8 @@ handler EVENT_RELEASEFROMENDOWMENT {
     BPC_MIN = 1
 
                                     ; breakpoints for decisions
-    LOW_LIMIT = 5000
-    HIGH_LIMIT = 20000
+    LOW_LIMIT = nd5000
+    HIGH_LIMIT = nd20000
                                     ; stack top on right -- sig bitmask on top, then tx, then account
                                     ; get rid of acct since we don't need to look at it
                                     ;acct tx sigs
@@ -125,8 +125,8 @@ handler EVENT_RELEASEFROMENDOWMENT {
     pick 1                          ;tx sigs tx
     field TX_QUANTITY               ;tx sigs amt
     push LOW_LIMIT                  ;tx sigs amt LOW_LIMIT
-    lte                             ;tx sigs (amt < LOW_LIMIT)
-    ifz
+    lte                             ;tx sigs (amt <= LOW_LIMIT)
+    ifnz
         zero                        ; we're under the limit, so succeed
         ret
     endif
@@ -146,8 +146,8 @@ handler EVENT_RELEASEFROMENDOWMENT {
     swap                            ;sigs tx
     field TX_QUANTITY               ;sigs amt
     push HIGH_LIMIT                 ;sigs amt HIGH_LIMIT
-    lte                             ;sigs (amt < HIGH_LIMIT)
-    ifz
+    lte                             ;sigs (amt <= HIGH_LIMIT)
+    ifnz
         zero                        ; we're under the limit, so we're done
         ret
     endif
@@ -183,7 +183,7 @@ handler EVENT_TRANSFER, EVENT_TRANSFERANDLOCK {
     GROUPB_MIN = 1
 
                                     ; breakpoints for decisions
-    HIGH_LIMIT = 20000
+    HIGH_LIMIT = nd20000
                                     ; stack top on right -- sig bitmask on top, then tx, then account
                                     ; get rid of acct since we don't need to look at it
                                     ;acct tx sigs
@@ -205,8 +205,8 @@ handler EVENT_TRANSFER, EVENT_TRANSFERANDLOCK {
     swap                            ;sigs tx
     field TX_QUANTITY               ;sigs amt
     push HIGH_LIMIT                 ;sigs amt HIGH_LIMIT
-    lte                             ;sigs (amt < HIGH_LIMIT)
-    ifz
+    lte                             ;sigs (amt <= HIGH_LIMIT)
+    ifnz
         zero                        ; we're under the limit, so we're done
         ret
     endif

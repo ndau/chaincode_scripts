@@ -1,45 +1,210 @@
+; testing this file
+load ./ntrd_target_sales.chbin
+
 ; validation scripts expect an account, a tx, and a bitmask
 ; but if our script doesn't inspect them (and this one doesn't)
 ; we can just push a 0 rather than an account record
 
-; first let's try a EVENT_CHANGEVALIDATION that should work
-; with 1 of each of first two signature sets
+;===== EVENT_CHANGEVALIDATION =====
+;   ChangeValidation: 1 of first 2 ntrd signatures and 1 of second 2 ntrd signatures, or 2 pre-BPC signatures
+; test with 1 of each of first two signature sets
+clear
 push 0
-push { TX_QUANTITY: 100 }
+push { TX_QUANTITY: nd100 }
 push 0x05
 event EVENT_CHANGEVALIDATION
 run succeed
 
-clear
 ; now do the same for 2 bpc sigs
+clear
 push 0
-push { TX_QUANTITY: 100 }
+push { TX_QUANTITY: nd100 }
 push 0x60
 event EVENT_CHANGEVALIDATION
 run succeed
 
-clear
 ; now expect a failure for 1 ntrd and 1 bpc
+clear
 push 0
-push { TX_QUANTITY: 100 }
+push { TX_QUANTITY: nd100 }
 push 0x22
 event EVENT_CHANGEVALIDATION
 run fail
 
-clear
 ; expect a failure for 2 ntrd in the first group
+clear
 push 0
-push { TX_QUANTITY: 100 }
+push { TX_QUANTITY: nd100 }
 push 0x03
 event EVENT_CHANGEVALIDATION
 run fail
 
-clear
 ; expect a failure for 2 ntrd in the second group
+clear
 push 0
-push { TX_QUANTITY: 100 }
+push { TX_QUANTITY: nd100 }
 push 0x0C
 event EVENT_CHANGEVALIDATION
+run fail
+
+;===== EVENT_RELEASEFROMENDOWMENT =====
+;   ReleaseFromEndowment:
+;   - Up to 5,000 ndau: 1 of first 2 ntrd signatures
+;   - 5,000 - 20,000 ndau: 1 of first 2 ntrd signatures and 1 of second 2 ntrd signatures
+;   - More than 20,000 ndau: 1 of first 2 ntrd signatures and 1 of second 2 ntrd signatures and 1 of pre-BPC
+
+;--- success cases ---
+
+;  low volume, 1 ntrd from first block
+clear
+push 0
+push { TX_QUANTITY: nd5000 }
+push 0x01
+event EVENT_RELEASEFROMENDOWMENT
+run succeed
+
+;  middle volume, 1 ntrd from first block, 1 from 2nd
+clear
+push 0
+push { TX_QUANTITY: nd20000 }
+push 0x0a
+event EVENT_RELEASEFROMENDOWMENT
+run succeed
+
+;  high volume, 1 ntrd from first block, 1 from 2nd, 1 bpc
+clear
+push 0
+push { TX_QUANTITY: nd50000 }
+push 0x2a
+event EVENT_RELEASEFROMENDOWMENT
+run succeed
+
+; ----- failure cases
+
+; low volume, 1 ntrd from 2nd block
+clear
+push 0
+push { TX_QUANTITY: nd100 }
+push 0x04
+event EVENT_RELEASEFROMENDOWMENT
+run fail
+
+; low volume, bpc only
+clear
+push 0
+push { TX_QUANTITY: nd100 }
+push 0x70
+event EVENT_RELEASEFROMENDOWMENT
+run fail
+
+; middle volume, 1 ntrd from first block
+clear
+push 0
+push { TX_QUANTITY: nd8100 }
+push 0x01
+event EVENT_RELEASEFROMENDOWMENT
+run fail
+
+; middle volume, bpc only
+clear
+push 0
+push { TX_QUANTITY: nd8100 }
+push 0x10
+event EVENT_RELEASEFROMENDOWMENT
+run fail
+
+; high volume, 1 ntrd from first block
+clear
+push 0
+push { TX_QUANTITY: nd28888 }
+push 0x01
+event EVENT_RELEASEFROMENDOWMENT
+run fail
+
+; high volume, all ntrd
+clear
+push 0
+push { TX_QUANTITY: nd28888 }
+push 0x0F
+event EVENT_RELEASEFROMENDOWMENT
+run fail
+
+; high volume, bpc only
+clear
+push 0
+push { TX_QUANTITY: nd28888 }
+push 0x40
+event EVENT_RELEASEFROMENDOWMENT
+run fail
+
+
+
+
+;===== EVENT_TRANSFER =====
+;   Transfer and TransferAndLock:
+;   - Up to 20,000 ndau: 1 of first 2 ntrd signatures
+;   - More than 20,000 ndau: 1 of first 2 ntrd signatures and 1 of second 2 ntrd signatures
+
+
+;--- success cases ---
+
+;  low volume, 1 ntrd from first block
+clear
+push 0
+push { TX_QUANTITY: nd20000 }
+push 0x01
+event EVENT_TRANSFER
+run succeed
+
+;  low volume, other ntrd from first block
+clear
+push 0
+push { TX_QUANTITY: nd20000 }
+push 0x02
+event EVENT_TRANSFER
+run succeed
+
+;  high volume, 1 of each
+clear
+push 0
+push { TX_QUANTITY: nd20001 }
+push 0x06
+event EVENT_TRANSFER
+run succeed
+
+
+;--- failure cases ---
+
+;  low volume, 1 ntrd from second block
+clear
+push 0
+push { TX_QUANTITY: nd20000 }
+push 0x04
+event EVENT_TRANSFER
+run fail
+
+;  low volume, other ntrd from second block
+clear
+push 0
+push { TX_QUANTITY: nd20000 }
+push 0x08
+event EVENT_TRANSFER
+run fail
+
+;  high volume, first block only
+clear
+push 0
+push { TX_QUANTITY: nd20001 }
+push 0x01
+event EVENT_TRANSFER
+run fail
+
+;  high volume, second block only
+clear
+push 0
+push { TX_QUANTITY: nd20001 }
+push 0x04
+event EVENT_TRANSFER
 run fail
 
 ; all done, get out of here
