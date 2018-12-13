@@ -25,8 +25,15 @@ The `ReleaseFromEndowment` transaction has some special handling. The top of the
 
 - `dest`: a struct representing the destination account into which this RFE will release funds.
 
-# Coding Conventions
+# Conventions
 
+## Structure
+* Chasm files should have the extension .chasm.
+* Binary files will be generated with .chbin. (These are ignored by .gitignore)
+* Test scripts to be run by crank should have the extension .crank.
+* Test scripts should start with a load command, giving the relative path (from the script) to the .chbin file.
+
+## Code style
 * Code should be run through chfmt
 * Functions should use CamelCase
 * Constants should be named, and constant names should be UPPERCASE
