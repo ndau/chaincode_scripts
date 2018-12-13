@@ -35,7 +35,7 @@ event EVENT_CHANGEVALIDATION
 run fail
 
 clear
-; expect a failure for 2 ntrd in the same group
+; expect a failure for 2 ntrd in the second group
 push 0
 push { TX_QUANTITY: 100 }
 push 0x0C
