@@ -6,7 +6,7 @@
 ; with 1 of each of first two signature sets
 push 0
 push { TX_QUANTITY: 100 }
-push 5
+push 0x05
 event EVENT_CHANGEVALIDATION
 run succeed
 
@@ -14,7 +14,7 @@ clear
 ; now do the same for 2 bpc sigs
 push 0
 push { TX_QUANTITY: 100 }
-push 96  ; 0x60
+push 0x60
 event EVENT_CHANGEVALIDATION
 run succeed
 
@@ -22,7 +22,23 @@ clear
 ; now expect a failure for 1 ntrd and 1 bpc
 push 0
 push { TX_QUANTITY: 100 }
-push 34 ; 0x22
+push 0x22
+event EVENT_CHANGEVALIDATION
+run fail
+
+clear
+; expect a failure for 2 ntrd in the first group
+push 0
+push { TX_QUANTITY: 100 }
+push 0x03
+event EVENT_CHANGEVALIDATION
+run fail
+
+clear
+; expect a failure for 2 ntrd in the same group
+push 0
+push { TX_QUANTITY: 100 }
+push 0x0C
 event EVENT_CHANGEVALIDATION
 run fail
 
