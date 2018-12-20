@@ -22,6 +22,11 @@
 ; 5 - pre-bpc B
 ; 6 - pre-bpc C
 
+; bitmasks for signature groups
+NTRD_GROUPA_MASK = 0x03
+NTRD_GROUPB_MASK = 0x0C
+BPC_MASK = 0x70
+
 ; we don't want any event we haven't specifically handled
 handler EVENT_DEFAULT {
     fail
@@ -38,11 +43,6 @@ handler EVENT_DEFAULT {
 ;    transaction
 ;    bitmask of which authorized keys were found in the signature list
 handler EVENT_CHANGEVALIDATION {
-                                    ; bitmasks for signature groups
-    NTRD_GROUPA_MASK = 0x03
-    NTRD_GROUPB_MASK = 0x0C
-    BPC_MASK = 0x70
-
                                     ; number of sigs required
     GROUPA_MIN = 1
     GROUPB_MIN = 1
@@ -91,11 +91,6 @@ handler EVENT_CHANGEVALIDATION {
 ;    transaction
 ;    bitmask of which authorized keys were found in the signature list
 handler EVENT_RELEASEFROMENDOWMENT {
-                                    ; bitmasks for signature groups
-    NTRD_GROUPA_MASK = 0x03
-    NTRD_GROUPB_MASK = 0x0C
-    BPC_MASK = 0x70
-
                                     ; number of sigs required
     GROUPA_MIN = 1
     GROUPB_MIN = 1
@@ -174,10 +169,6 @@ handler EVENT_RELEASEFROMENDOWMENT {
 ;    transaction
 ;    bitmask of which authorized keys were found in the signature list
 handler EVENT_TRANSFER, EVENT_TRANSFERANDLOCK {
-                                    ; bitmasks for signature groups
-    NTRD_GROUPA_MASK = 0x03
-    NTRD_GROUPB_MASK = 0x0C
-
                                     ; number of sigs required
     GROUPA_MIN = 1
     GROUPB_MIN = 1
