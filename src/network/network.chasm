@@ -6,7 +6,7 @@ handler EVENT_NOMINATENODEREWARD {
     zero                            ; auto-succeed: we know that at least 1 signature was valid, from external checks
 }
 
-handler 16 {                        ; COMMANDVALIDATORCHANGE
+handler EVENT_COMMANDVALIDATORCHANGE {
     call NetworkValidation
 }
 
