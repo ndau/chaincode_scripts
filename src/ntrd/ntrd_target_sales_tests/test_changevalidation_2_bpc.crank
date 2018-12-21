@@ -1,0 +1,16 @@
+; testing this file
+load ../ntrd_target_sales.chbin
+
+;===== EVENT_CHANGEVALIDATION =====
+;   ChangeValidation: 1 of first 2 ntrd signatures and 1 of second 2 ntrd signatures, or 2 pre-BPC signatures
+
+; test for 2 bpc sigs
+clear
+push 0
+push { TX_QUANTITY: nd100 }
+push 0x60
+event EVENT_CHANGEVALIDATION
+run succeed
+
+; quit to suppress output on success
+quit
