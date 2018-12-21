@@ -17,8 +17,7 @@ handler EVENT_CHANGEVALIDATION {
     not                             ; 0 is a good return
 }
 
-; EVENT_SIDECHAINTX, but that constant isn't yet defined
-handler 17 {
+handler EVENT_SIDECHAINTX {
     call EnoughSigs
     not                             ; 0 is a good return
 }
