@@ -1,6 +1,7 @@
 # chaincode tooling
 chasm
 chfmt
+crank
 
 # chaincode binaries
 **/*.chbin
