@@ -14,6 +14,3 @@ push { TX_QUANTITY: nd100 }
 push 0x04
 event EVENT_RELEASEFROMENDOWMENT
 run fail
-
-; quit to suppress output on success
-quit

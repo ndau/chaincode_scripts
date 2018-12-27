@@ -14,6 +14,3 @@ push { TX_QUANTITY: nd28888 }
 push 0x0F
 event EVENT_RELEASEFROMENDOWMENT
 run fail
-
-; quit to suppress output on success
-quit

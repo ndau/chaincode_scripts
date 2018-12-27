@@ -11,6 +11,3 @@ push { TX_QUANTITY: nd100 }
 push 0x60
 event EVENT_CHANGEVALIDATION
 run succeed
-
-; quit to suppress output on success
-quit

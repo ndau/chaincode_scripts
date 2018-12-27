@@ -13,6 +13,3 @@ push { TX_QUANTITY: nd20000 }
 push 0x02
 event EVENT_TRANSFER
 run succeed
-
-; quit to suppress output on success
-quit

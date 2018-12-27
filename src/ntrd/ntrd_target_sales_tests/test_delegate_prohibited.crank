@@ -13,6 +13,3 @@ run fail
 
 ; all done, get out of here
 quit
-
-; quit to suppress output on success
-quit
