@@ -1,0 +1,12 @@
+; testing this file
+load ../ntrd_target_sales.chbin
+
+;===== EVENT_TRANSFER =====
+; permitted with 1 signature
+
+clear
+push 0
+push { TX_QUANTITY: nd20000 }
+push 0x02
+event EVENT_TRANSFER
+run succeed

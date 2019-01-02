@@ -1,22 +1,36 @@
+; ntrd Operations
+; Permitted Transactions: All except Delegate and Lock
+; Validation Keys: 4 ntrd Keys
+; Validation Rules:
+;   ChangeValidation: 1 of first 2 signatures and 1 of second 2 signatures
+;   All others: 1 signature
+
+
 handler EVENT_DEFAULT {
     zero                            ; chaincode can Just Succeed, here, because
-                                    ; we validate that at least one signature
+                                    ; ndau validates that at least one signature
                                     ; is valid
 }
 
+; Delegate is forbidden
 handler EVENT_DELEGATE {
     fail
 }
 
+; Lock is forbidden
 handler EVENT_LOCK {
     fail
 }
 
+;   ChangeValidation: 1 of first 2 signatures and 1 of second 2 signatures
 handler EVENT_CHANGEVALIDATION {
+                                    ; stack top on right -- sig bitmask on top, then tx, then account
+                                    ;acct tx sigs
     call LowPairsOneEach
 }
 
 
+; 1 of first 2 signatures and 1 of second 2 signatures
 func LowPairsOneEach(1) {
                                     ; sigs
     push 0xc                        ; sigs 0b1100

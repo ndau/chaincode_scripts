@@ -1,0 +1,37 @@
+; testing this file
+load ../ntrd_target_sales.chbin
+
+;===== EVENT_CHANGEVALIDATION =====
+;   ChangeValidation: 1 of first 2 ntrd signatures and 1 of second 2 ntrd signatures
+
+; now expect a failure for 1 ntrd of each of the possible combinations
+clear
+push 0
+push { TX_QUANTITY: nd100 }
+push 0x01
+event EVENT_CHANGEVALIDATION
+run fail
+
+; now expect a failure for 1 ntrd
+clear
+push 0
+push { TX_QUANTITY: nd100 }
+push 0x02
+event EVENT_CHANGEVALIDATION
+run fail
+
+; now expect a failure for 1 ntrd
+clear
+push 0
+push { TX_QUANTITY: nd100 }
+push 0x04
+event EVENT_CHANGEVALIDATION
+run fail
+
+; now expect a failure for 1 ntrd
+clear
+push 0
+push { TX_QUANTITY: nd100 }
+push 0x08
+event EVENT_CHANGEVALIDATION
+run fail
