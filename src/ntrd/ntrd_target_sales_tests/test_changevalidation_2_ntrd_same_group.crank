@@ -8,6 +8,6 @@ load ../ntrd_target_sales.chbin
 clear
 push 0
 push { TX_QUANTITY: nd100 }
-push 0x0C
+push 0b000_11_00
 event EVENT_CHANGEVALIDATION
 run fail

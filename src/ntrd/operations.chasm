@@ -33,7 +33,7 @@ handler EVENT_CHANGEVALIDATION {
 ; 1 of first 2 signatures and 1 of second 2 signatures
 func LowPairsOneEach(1) {
                                     ; sigs
-    push 0xc                        ; sigs 0b1100
+    push 0b1100                     ; sigs 0b1100
     one                             ; sigs 0b1100 1
     call CheckMask                  ; sigs 0b1100 1 returncode
                                     ; if the first pair has a nonzero return code,
@@ -43,7 +43,7 @@ func LowPairsOneEach(1) {
     endif
                                     ; check the other pair of ntrd sigs
     drop2                           ; sigs
-    push 0x3                        ; sigs 0b0011
+    push 0b0011                     ; sigs 0b0011
     one
     call CheckMask                  ; sigs 0b0011 1 returncode
                                     ; this return code Just Works

@@ -10,6 +10,6 @@ load ../ntrd_target_sales.chbin
 clear
 push 0
 push { TX_QUANTITY: nd20000 }
-push 0x01
+push 0b000_00_01
 event EVENT_TRANSFER
 run succeed

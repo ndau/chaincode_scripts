@@ -2,36 +2,35 @@
 load ../operations.chbin
 
 ;===== EVENT_CHANGEVALIDATION =====
-;   ChangeValidation: 1 of first 2 ntrd signatures and 1 of second 2 ntrd signatures
+;   ChangeValidation: 1st signature and 1 of second 2 signatures
 
-; now expect a failure for 1 ntrd of each of the possible combinations
+; test with combinations of 2
 clear
 push 0
 push { TX_QUANTITY: nd100 }
-push 0b00_01
+push 0b01_1
 event EVENT_CHANGEVALIDATION
-run fail
+run succeed
 
-; now expect a failure for 1 ntrd
 clear
 push 0
 push { TX_QUANTITY: nd100 }
-push 0b00_10
+push 0b10_1
 event EVENT_CHANGEVALIDATION
-run fail
+run succeed
 
-; now expect a failure for 1 ntrd
+; fail if first sig is missing
 clear
 push 0
 push { TX_QUANTITY: nd100 }
-push 0b01_00
+push 0b11_0
 event EVENT_CHANGEVALIDATION
 run fail
 
-; now expect a failure for 1 ntrd
+; all 3 sigs is OK though
 clear
 push 0
 push { TX_QUANTITY: nd100 }
-push 0b10_00
+push 0b11_1
 event EVENT_CHANGEVALIDATION
-run fail
+run succeed

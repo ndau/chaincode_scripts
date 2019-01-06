@@ -2,14 +2,14 @@
 load ../operations.chbin
 
 ; ===== DELEGATE =====
-; make sure that delegate transactions are disallowed
+; make sure that delegate transactions are allowed
 
 clear
 push 0
 push { TX_QUANTITY: nd20001 }
-push 0x7F
+push 0b01111111
 event EVENT_DELEGATE
-run fail
+run succeed
 
 ; all done, get out of here
 quit

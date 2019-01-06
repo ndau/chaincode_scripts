@@ -1,5 +1,5 @@
 ; testing this file
-load ../ntrd_target_sales.chbin
+load ../operations.chbin
 
 ;===== EVENT_CHANGEVALIDATION =====
 ;   ChangeValidation: 1 of first 2 ntrd signatures and 1 of second 2 ntrd signatures
@@ -8,6 +8,6 @@ load ../ntrd_target_sales.chbin
 clear
 push 0
 push { TX_QUANTITY: nd100 }
-push 0x03
+push 0b00_11
 event EVENT_CHANGEVALIDATION
 run fail

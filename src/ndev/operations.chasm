@@ -1,3 +1,12 @@
+; ndev Operations
+; Permitted Transactions: All
+; Validation Keys: 3 ndev Keys
+; Validation Rules:
+
+;   ChangeValidation: 1st signature and 1 of second 2 signatures
+;   All others: 1 signature
+
+
 handler EVENT_DEFAULT {
     zero                            ; chaincode can Just Succeed, here, because
                                     ; we validate that at least one signature
@@ -9,16 +18,13 @@ handler EVENT_CHANGEVALIDATION {
     dup                             ; sigs sigs
     one                             ; sigs sigs 1
     and                             ; sigs first_sig
-    ifz
+    ifz                             ; sigs
         fail
     endif
 
-    swap                            ; sigs
-    push 0x6                        ; sigs 0b0110
+    push 0b110                      ; sigs 0b110
     and                             ; second_two_sigs
     count1s                         ; nsecond_sigs
-    one                             ; nsecond_sigs 1
-    lte                             ; (nsecond_sigs <= 1)
-                                    ; if true, fail
-                                    ; if false, succeed
+    not                             ; if 0, fail
+                                    ; if 1, succeed
 }

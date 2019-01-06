@@ -1,5 +1,5 @@
 ; testing this file
-load ../ntrd_target_sales.chbin
+load ../operations.chbin
 
 ; ===== LOCK =====
 ; make sure that lock transactions are disallowed

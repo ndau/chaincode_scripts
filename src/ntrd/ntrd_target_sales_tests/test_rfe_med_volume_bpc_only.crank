@@ -11,6 +11,6 @@ load ../ntrd_target_sales.chbin
 clear
 push 0
 push { TX_QUANTITY: nd8100 }
-push 0x10
+push 0b010_00_00
 event EVENT_RELEASEFROMENDOWMENT
 run fail
