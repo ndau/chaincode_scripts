@@ -2,20 +2,20 @@
 load ../operations.chbin
 
 ;===== EVENT_CHANGEVALIDATION =====
-;   ChangeValidation: 1st signature and 1 of second 2 signatures
+;   ChangeValidation: 2 of 3 signatures
 
 ; test with combinations of 2
 clear
 push 0
 push { TX_QUANTITY: nd100 }
-push 0b01_1
+push 0b011
 event EVENT_CHANGEVALIDATION
 run succeed
 
 clear
 push 0
 push { TX_QUANTITY: nd100 }
-push 0b10_1
+push 0b101
 event EVENT_CHANGEVALIDATION
 run succeed
 
@@ -23,14 +23,14 @@ run succeed
 clear
 push 0
 push { TX_QUANTITY: nd100 }
-push 0b11_0
+push 0b110
 event EVENT_CHANGEVALIDATION
-run fail
+run succeed
 
 ; all 3 sigs is OK though
 clear
 push 0
 push { TX_QUANTITY: nd100 }
-push 0b11_1
+push 0b111
 event EVENT_CHANGEVALIDATION
 run succeed

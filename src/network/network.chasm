@@ -1,38 +1,50 @@
+; Permitted Transactions: ChangeValidation, NominateNodeRewards, CommandValidatorChange
+; Validation Keys: 3 ndau Network Keys plus 3 pre-BPC Keys
+; Validation Rules:
+
+;   ChangeValidation: 2 ndau Network signatures and 1 pre-BPC signature
+;   NominateNodeRewards: 1 ndau Network signature
+;   CommandValidatorChange: 2 ndau Network signatures and 1 pre-BPC signature
+
+NETWORK_MASK = 0b000_111
+BPC_MASK = 0b111_000
+
 handler EVENT_DEFAULT {
     fail
 }
 
 handler EVENT_NOMINATENODEREWARD {
-    zero                            ; auto-succeed: we know that at least 1 signature was valid, from external checks
-}
-
-handler EVENT_COMMANDVALIDATORCHANGE {
-    call NetworkValidation
+                                    ; ... sigs
+    push NETWORK_MASK               ; sigs mask
+    push 1                          ; num reqd
+    call CheckMask
 }
 
 handler EVENT_CHANGEVALIDATION {
     call NetworkValidation
 }
 
-func NetworkValidation(1) {
-    NETWORK_MASK = 0x7              ; 0b_0111
-    NETWORK_REQD = 1
+handler EVENT_COMMANDVALIDATORCHANGE {
+    call NetworkValidation
+}
 
-    BPC_MASK = 0x38                 ; 0b_0011_1000
+func NetworkValidation(1) {
+    NETWORK_REQD = 2
     BPC_REQD = 1
 
                                     ; ... sigs
                                     ; check that the BPC sig is present
-    push BPC_MASK
-    push BPC_REQD
-    call CheckMask
-    ifnz
+    push BPC_MASK                   ; sigs mask
+    push BPC_REQD                   ; sigs mask reqd
+    call CheckMask                  ; sigs mask reqd didfail
+    ifnz                            ; sigs mask reqd
         fail
     endif
-
-    push NETWORK_MASK
-    push NETWORK_REQD
-    call CheckMask                  ; returns a valid return code
+                                    ; sigs mask reqd
+    drop2                           ; sigs
+    push NETWORK_MASK               ; sigs mask
+    push NETWORK_REQD               ; sigs mask reqd
+    call CheckMask                  ; sigs mask reqd didfail
 }
 
 

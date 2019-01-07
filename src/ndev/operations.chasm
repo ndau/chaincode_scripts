@@ -3,7 +3,7 @@
 ; Validation Keys: 3 ndev Keys
 ; Validation Rules:
 
-;   ChangeValidation: 1st signature and 1 of second 2 signatures
+;   ChangeValidation: 2 of 3 signatures
 ;   All others: 1 signature
 
 
@@ -15,16 +15,7 @@ handler EVENT_DEFAULT {
 
 handler EVENT_CHANGEVALIDATION {
                                     ; ... sigs
-    dup                             ; sigs sigs
-    one                             ; sigs sigs 1
-    and                             ; sigs first_sig
-    ifz                             ; sigs
-        fail
-    endif
-
-    push 0b110                      ; sigs 0b110
-    and                             ; second_two_sigs
     count1s                         ; nsecond_sigs
-    not                             ; if 0, fail
-                                    ; if 1, succeed
+    push 2                          ; nsecond_sigs 2
+    lt                              ; true (fail) if there are less than 2 sigs
 }
