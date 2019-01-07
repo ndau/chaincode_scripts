@@ -15,5 +15,5 @@ handler EVENT_DEFAULT {
     swap                            ;tx nkeys nsigs
     dup                             ;tx nkeys nsigs nsigs
     add                             ;tx nkeys 2*nsigs
-    lt                              ;tx (true if nkeys < 2*nsigs)
+    gte                             ;tx (true (fail) if nkeys < 2*nsigs)
 }
