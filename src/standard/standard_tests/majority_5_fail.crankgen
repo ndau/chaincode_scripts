@@ -1,0 +1,21 @@
+VAR sig = 00011,00110,01100,11000,10001,10010,01010,00101
+
+BEGIN_TEMPLATE
+; testing this file
+load ../majority.chbin
+
+;===== works for any event =====
+; requires greater than 50% of keys
+; Expected arguments on the stack in order from bottom to top are:
+;    account
+;    transaction
+;    bitmask of which authorized keys were found in the signature list
+
+; test with combinations of 3 out of 4
+; now start failing with 2/4
+clear
+push { ACCT_VALIDATIONKEYS: [ 1 2 3 4 5 ] }
+push 0   ; the tx doesn't matter
+push 0b_$sig
+event EVENT_CHANGEVALIDATION
+run fail
