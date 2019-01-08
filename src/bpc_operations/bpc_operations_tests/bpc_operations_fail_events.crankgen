@@ -1,0 +1,20 @@
+VAR event = EVENT_TRANSFER, EVENT_RELEASEFROMENDOWMENT, EVENT_CHANGESETTLEMENTPERIOD, EVENT_DELEGATE, EVENT_CREDITEAI, EVENT_LOCK, EVENT_NOTIFY, EVENT_SETREWARDSDESTINATION, EVENT_CLAIMACCOUNT, EVENT_STAKE, EVENT_REGISTERNODE, EVENT_NOMINATENODEREWARD, EVENT_CLAIMNODEREWARD, EVENT_TRANSFERANDLOCK, EVENT_COMMANDVALIDATORCHANGE
+VAR bpc = 111
+
+BEGIN_TEMPLATE
+load ../bpc_operations.chbin
+
+; - Permitted Transactions: ChangeValidation, SidechainTx, Chaos Chain Update
+; - Validation Keys: 3 pre-BPC Keys
+; - Validation Rules:
+;     - ChangeValidation: 2 signatures
+;     - SidechainTx: 2 signatures
+;     - Chaos Chain Update: 2 signatures
+
+; all non-specified events should fail even with 3 signatures
+clear
+push 0
+push { TX_QUANTITY: nd100 }
+push 0b_111
+event $event
+run fail
