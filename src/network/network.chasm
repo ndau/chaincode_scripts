@@ -47,7 +47,7 @@ func NetworkValidation(1) {
     call CheckMask                  ; sigs mask reqd didfail
 }
 
-
+; returns true if the mask failed to verify
 func CheckMask(3) {
                                     ; sigs mask nreqd_sigs
     tuck 2                          ; nreqd_sigs sigs mask

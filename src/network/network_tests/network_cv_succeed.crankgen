@@ -1,0 +1,18 @@
+VAR event = EVENT_CHANGEVALIDATION, EVENT_COMMANDVALIDATORCHANGE
+VAR bpc = 001,010,011,100,101,110,111
+VAR network = 011,101,110,111
+
+BEGIN_TEMPLATE
+load ../network.chbin
+
+;===== EVENT_CHANGEVALIDATION =====
+;   ChangeValidation: 2 ndau Network signatures and 1 pre-BPC signature
+
+; expect success for 3 or more signatures as long as there are at least 2 network sigs and at least 1 bpc
+
+clear
+push 0
+push { TX_QUANTITY: nd100 }
+push 0b_${bpc}_${network}
+event $event
+run succeed

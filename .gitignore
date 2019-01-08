@@ -5,3 +5,4 @@ crank
 
 # chaincode binaries
 **/*.chbin
+**/*gen.crank
