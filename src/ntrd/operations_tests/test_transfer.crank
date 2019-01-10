@@ -1,0 +1,12 @@
+; testing this file
+load ../operations.chbin
+
+;===== EVENT_TRANSFER =====
+; permitted with 1 signature
+
+clear
+push 0
+push { TX_QUANTITY: nd20000 }
+push 0b00_10
+event EVENT_TRANSFER
+run succeed

@@ -1,0 +1,20 @@
+VAR event = EVENT_CHANGEVALIDATION, EVENT_SIDECHAINTX
+VAR bpc = 000,001,010,100
+
+BEGIN_TEMPLATE
+load ../bpc_operations.chbin
+
+; - Permitted Transactions: ChangeValidation, SidechainTx, Chaos Chain Update
+; - Validation Keys: 3 pre-BPC Keys
+; - Validation Rules:
+;     - ChangeValidation: 2 signatures
+;     - SidechainTx: 2 signatures
+;     - Chaos Chain Update: 2 signatures
+
+; valid events should fail with insufficient keys
+clear
+push 0
+push { TX_QUANTITY: nd100 }
+push 0b_${bpc}
+event $event
+run fail

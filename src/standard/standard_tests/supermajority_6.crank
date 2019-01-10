@@ -1,0 +1,138 @@
+; testing this file
+load ../supermajority.chbin
+
+;===== works for any event =====
+; supermajority calculation -- requires 2/3 of all keys or more to sign
+;
+; if 6 signatures exist on an account, and 4 sign, this succeeds
+; for this file, at least 4/6 are required (since 4/6 is == 2/3)
+;
+; Expected arguments on the stack in order from bottom to top are:
+;    account
+;    transaction
+;    bitmask of which authorized keys were found in the signature list
+
+; test with combinations of 3 out of 6
+clear
+push { ACCT_VALIDATIONKEYS: [ 1 2 3 4 5 6 ] }
+push 0   ; the tx doesn't matter
+push 0b000111
+event EVENT_CHANGEVALIDATION
+run fail
+
+clear
+push { ACCT_VALIDATIONKEYS: [ 1 2 3 4 5 6 ] }
+push 0   ; the tx doesn't matter
+push 0b100101
+event EVENT_CHANGEVALIDATION
+run fail
+
+clear
+push { ACCT_VALIDATIONKEYS: [ 1 2 3 4 5 6 ] }
+push 0   ; the tx doesn't matter
+push 0b011100
+event EVENT_CHANGEVALIDATION
+run fail
+
+clear
+push { ACCT_VALIDATIONKEYS: [ 1 2 3 4 5 6 ] }
+push 0   ; the tx doesn't matter
+push 0b100110
+event EVENT_CHANGEVALIDATION
+run fail
+
+; test with 4/6
+clear
+push { ACCT_VALIDATIONKEYS: [ 1 2 3 4 5 6 ] }
+push 0   ; the tx doesn't matter
+push 0b101101
+event EVENT_CHANGEVALIDATION
+run succeed
+
+clear
+push { ACCT_VALIDATIONKEYS: [ 1 2 3 4 5 6 ] }
+push 0   ; the tx doesn't matter
+push 0b111100
+event EVENT_CHANGEVALIDATION
+run succeed
+
+clear
+push { ACCT_VALIDATIONKEYS: [ 1 2 3 4 5 6 ] }
+push 0   ; the tx doesn't matter
+push 0b011110
+event EVENT_CHANGEVALIDATION
+run succeed
+
+clear
+push { ACCT_VALIDATIONKEYS: [ 1 2 3 4 5 6 ] }
+push 0   ; the tx doesn't matter
+push 0b011011
+event EVENT_CHANGEVALIDATION
+run succeed
+
+; check 5
+clear
+push { ACCT_VALIDATIONKEYS: [ 1 2 3 4 5 6 ] }
+push 0   ; the tx doesn't matter
+push 0b111110
+event EVENT_CHANGEVALIDATION
+run succeed
+
+; check 6
+clear
+push { ACCT_VALIDATIONKEYS: [ 1 2 3 4 5 6 ] }
+push 0   ; the tx doesn't matter
+push 0b111111
+event EVENT_CHANGEVALIDATION
+run succeed
+
+; fail with 2/6
+clear
+push { ACCT_VALIDATIONKEYS: [ 1 2 3 4 5 6 ] }
+push 0   ; the tx doesn't matter
+push 0b11000
+event EVENT_CHANGEVALIDATION
+run fail
+
+clear
+push { ACCT_VALIDATIONKEYS: [ 1 2 3 4 5 6 ] }
+push 0   ; the tx doesn't matter
+push 0b000110
+event EVENT_CHANGEVALIDATION
+run fail
+
+clear
+push { ACCT_VALIDATIONKEYS: [ 1 2 3 4 5 6 ] }
+push 0   ; the tx doesn't matter
+push 0b010001
+event EVENT_CHANGEVALIDATION
+run fail
+
+clear
+push { ACCT_VALIDATIONKEYS: [ 1 2 3 4 5 6 ] }
+push 0   ; the tx doesn't matter
+push 0b11000
+event EVENT_CHANGEVALIDATION
+run fail
+
+; and 1/6
+clear
+push { ACCT_VALIDATIONKEYS: [ 1 2 3 4 5 6 ] }
+push 0   ; the tx doesn't matter
+push 0b000001
+event EVENT_CHANGEVALIDATION
+run fail
+
+clear
+push { ACCT_VALIDATIONKEYS: [ 1 2 3 4 5 6 ] }
+push 0   ; the tx doesn't matter
+push 0b100000
+event EVENT_CHANGEVALIDATION
+run fail
+
+clear
+push { ACCT_VALIDATIONKEYS: [ 1 2 3 4 5 6 ] }
+push 0   ; the tx doesn't matter
+push 0b001000
+event EVENT_CHANGEVALIDATION
+run fail

@@ -1,5 +1,5 @@
 ; simple single signature
 
 handler EVENT_DEFAULT {
-    zero    ; succeed always; single-signature stuff Just Works, externally to chaincode
+    zero                            ; succeed always; single-signature stuff Just Works, externally to chaincode
 }

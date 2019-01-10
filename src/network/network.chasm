@@ -1,51 +1,63 @@
+; Permitted Transactions: ChangeValidation, NominateNodeRewards, CommandValidatorChange
+; Validation Keys: 3 ndau Network Keys plus 3 pre-BPC Keys
+; Validation Rules:
+
+;   ChangeValidation: 2 ndau Network signatures and 1 pre-BPC signature
+;   NominateNodeRewards: 1 ndau Network signature
+;   CommandValidatorChange: 2 ndau Network signatures and 1 pre-BPC signature
+
+NETWORK_MASK = 0b000_111
+BPC_MASK = 0b111_000
+
 handler EVENT_DEFAULT {
     fail
 }
 
 handler EVENT_NOMINATENODEREWARD {
-    zero ; auto-succeed: we know that at least 1 signature was valid, from external checks
-}
-
-handler 16 { ; COMMANDVALIDATORCHANGE
-    call NetworkValidation
+                                    ; ... sigs
+    push NETWORK_MASK               ; sigs mask
+    push 1                          ; num reqd
+    call CheckMask
 }
 
 handler EVENT_CHANGEVALIDATION {
     call NetworkValidation
 }
 
-func NetworkValidation(1) {
-    NETWORK_MASK = 0x7      ; 0b_0111
-    NETWORK_REQD = 1
-
-    BPC_MASK = 0x38         ; 0b_0011_1000
-    BPC_REQD = 1
-
-                            ; ... sigs
-    ; check that the BPC sig is present
-    push BPC_MASK
-    push BPC_REQD
-    call CheckMask
-    ifnz
-        fail
-    endif
-
-    push NETWORK_MASK
-    push NETWORK_REQD
-    call CheckMask ; returns a valid return code
+handler EVENT_COMMANDVALIDATORCHANGE {
+    call NetworkValidation
 }
 
+func NetworkValidation(1) {
+    NETWORK_REQD = 2
+    BPC_REQD = 1
 
+                                    ; ... sigs
+                                    ; check that the BPC sig is present
+    push BPC_MASK                   ; sigs mask
+    push BPC_REQD                   ; sigs mask reqd
+    call CheckMask                  ; sigs mask reqd didfail
+    ifnz                            ; sigs mask reqd
+        fail
+    endif
+                                    ; sigs mask reqd
+    drop2                           ; sigs
+    push NETWORK_MASK               ; sigs mask
+    push NETWORK_REQD               ; sigs mask reqd
+    call CheckMask                  ; sigs mask reqd didfail
+}
+
+; returns true if the mask failed to verify
 func CheckMask(3) {
-                    ; sigs mask nreqd_sigs
-    tuck 2          ; nreqd_sigs sigs mask
-    and             ; nreqd_sigs masked_sigs
-    call HasN       ; ... (nmasked_sigs >= 2)
-    not             ; ... returncode
+                                    ; sigs mask nreqd_sigs
+    tuck 2                          ; nreqd_sigs sigs mask
+    and                             ; nreqd_sigs masked_sigs
+    call HasN                       ; ... (nmasked_sigs >= 2)
+    not                             ; ... returncode
 }
 
 func HasN(2) {
-            ; nreqd_sigs sigs
-    count1s ; nreqd_sigs nsigs
-    lte     ; (nreqd_sigs <= nsigs)
+                                    ; nreqd_sigs sigs
+    count1s                         ; nreqd_sigs nsigs
+    lte                             ; (nreqd_sigs <= nsigs)
 }

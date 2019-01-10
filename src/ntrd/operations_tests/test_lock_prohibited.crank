@@ -1,0 +1,12 @@
+; testing this file
+load ../operations.chbin
+
+; ===== LOCK =====
+; make sure that lock transactions are disallowed
+
+clear
+push 0
+push { TX_QUANTITY: nd20001 }
+push 0x7F
+event EVENT_LOCK
+run fail

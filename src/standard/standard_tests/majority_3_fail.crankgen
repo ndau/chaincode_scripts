@@ -1,0 +1,15 @@
+VAR sig = 001,010,100
+
+BEGIN_TEMPLATE
+; testing this file
+load ../majority.chbin
+
+; test majority for 3
+
+; 3 signers need 2 sigs
+clear
+push { ACCT_VALIDATIONKEYS: [ 1 2 3 ] }
+push 0   ; the tx doesn't matter
+push 0b_$sig
+run fail
+

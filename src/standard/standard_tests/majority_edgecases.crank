@@ -1,0 +1,65 @@
+; testing this file
+load ../majority.chbin
+
+; test the edge cases for majority
+
+; only one signer
+clear
+push { ACCT_VALIDATIONKEYS: [ 1 ] }
+push 0   ; the tx doesn't matter
+push 0b1
+event EVENT_CHANGEVALIDATION
+run succeed
+
+; two signers need 2 sigs
+clear
+push { ACCT_VALIDATIONKEYS: [ 1 2 ] }
+push 0   ; the tx doesn't matter
+push 0b11
+event EVENT_CHANGEVALIDATION
+run succeed
+
+; 1/2 fails
+clear
+push { ACCT_VALIDATIONKEYS: [ 1 2 ] }
+push 0   ; the tx doesn't matter
+push 0b01
+event EVENT_CHANGEVALIDATION
+run fail
+
+clear
+push { ACCT_VALIDATIONKEYS: [ 1 2 ] }
+push 0   ; the tx doesn't matter
+push 0b10
+event EVENT_CHANGEVALIDATION
+run fail
+
+; try 16
+clear
+push { ACCT_VALIDATIONKEYS: [ 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 ] }
+push 0   ; the tx doesn't matter
+push 0x55AA
+event EVENT_CHANGEVALIDATION
+run fail
+
+clear
+push { ACCT_VALIDATIONKEYS: [ 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 ] }
+push 0   ; the tx doesn't matter
+push 0x00FF
+event EVENT_CHANGEVALIDATION
+run fail
+
+clear
+push { ACCT_VALIDATIONKEYS: [ 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 ] }
+push 0   ; the tx doesn't matter
+push 0xFF00
+event EVENT_CHANGEVALIDATION
+run fail
+
+clear
+push { ACCT_VALIDATIONKEYS: [ 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 ] }
+push 0   ; the tx doesn't matter
+push 0xFF01
+event EVENT_CHANGEVALIDATION
+run succeed
+

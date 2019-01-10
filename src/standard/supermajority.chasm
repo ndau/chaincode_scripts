@@ -1,4 +1,4 @@
-; plurality calculation -- requires 2/3 of all keys or more to sign
+; supermajority calculation -- requires 2/3 of all keys or more to sign
 ;
 ; if 6 signatures exist on an account, and 4 sign, this succeeds
 ;
@@ -19,5 +19,5 @@ handler EVENT_DEFAULT {
     swap                            ;tx (2*nkeys) nsigs
     push 3                          ;tx (2*nkeys) nsigs 3
     mul                             ;tx (2*nkeys) (3*nsigs)
-    lt                              ;tx (true (fail) if (2*nkeys) < (3*nsigs)
+    gt                              ;tx (true (fail) if (2*nkeys) >= (3*nsigs))
 }

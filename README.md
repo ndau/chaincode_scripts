@@ -31,6 +31,7 @@ The `ReleaseFromEndowment` transaction has some special handling. The top of the
 * Chasm files should have the extension .chasm.
 * Binary files will be generated with .chbin. (These are ignored by .gitignore)
 * Test scripts to be run by crank should have the extension .crank.
+* Test scripts should live in a subdirectory of the directory containing the script being tested.
 * Test scripts should start with a load command, giving the relative path (from the script) to the .chbin file.
 
 ## Code style
