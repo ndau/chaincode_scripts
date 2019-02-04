@@ -1,6 +1,11 @@
-# Validation Scripts
+# Chaincode Scripts
 
-This repo contains a number of chaincode validation scripts. In general, two user stories are currently supported:
+This repo contains a number of chaincode scripts.
+
+We organize them by the chaincode "context". Validation scripts are stored under validation.
+
+# Validation
+In general, two user stories are currently supported:
 
 - Special accounts associated with Ndau get bespoke scripts
 - A selection of generic validation scripts is available for use by ndau users
