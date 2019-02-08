@@ -1,0 +1,91 @@
+VAR event = EVENT_RELEASEFROMENDOWMENT
+
+BEGIN_TEMPLATE
+load ../axiom.chbin
+
+; - Permitted Transactions: Release From Endowment
+; - Validation Keys: two sets of two Axiom keys (Axiom A, Axiom B)
+; - Validation Rules:
+;     - <= 5,000 ndau - 1 primary Axiom signature
+;     - > 5,000 and <= 20,000 ndau - 1 primary Axiom signature and 1 secondary Axiom signature
+;     - > 20,000 ndau - any 3 of the 4 Axiom signatures in both groups
+
+; less than 5,000 ndau, 1 primary Axiom
+clear
+push 0
+push { TX_QUANTITY: nd100 }
+push 0b_00_01
+event $event
+run succeed
+
+; less than 5,000 ndau, 1 secondary Axiom (should fail)
+clear
+push 0
+push { TX_QUANTITY: nd100 }
+push 0b_01_00
+event $event
+run fail
+
+; 5,001 ndau, 1 primary Axiom (should fail)
+clear
+push 0
+push { TX_QUANTITY: nd5001 }
+push 0b_00_01
+event $event
+run fail
+
+; 5,001 ndau, 1 secondary Axiom (should fail)
+clear
+push 0
+push { TX_QUANTITY: nd5001 }
+push 0b_01_00
+event $event
+run fail
+
+; 5,001 ndau, 1 primary Axiom and 1 secondary Axiom
+clear
+push 0
+push { TX_QUANTITY: nd5001 }
+push 0b_01_01
+event $event
+run succeed
+
+; 20,001 ndau, 1 primary Axiom (should fail)
+clear
+push 0
+push { TX_QUANTITY: nd20001 }
+push 0b_00_01
+event $event
+run fail
+
+; 20,001 ndau, 1 secondary Axiom (should fail)
+clear
+push 0
+push { TX_QUANTITY: nd20001 }
+push 0b_01_00
+event $event
+run fail
+
+; 20,001 ndau, 1 primary Axiom and 1 secondary Axiom (should fail)
+clear
+push 0
+push { TX_QUANTITY: nd20001 }
+push 0b_01_01
+event $event
+run fail
+
+; 20,001 ndau, 2 primary Axiom and 1 secondary Axiom
+clear
+push 0
+push { TX_QUANTITY: nd20001 }
+push 0b_01_11
+event $event
+run succeed
+
+; 20,001 ndau, 1 primary Axiom and 2 secondary Axiom
+clear
+push 0
+push { TX_QUANTITY: nd20001 }
+push 0b_11_01
+event $event
+run succeed

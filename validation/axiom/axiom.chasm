@@ -1,30 +1,32 @@
-; this script is for sales by ntrd at the ndau target price.
+; this script is for release of ndau by Axiom for sale at the ndau target price and for issuance when sold.
+; the BPC has no role in these operations but in its oversight role may change these validation rules if necessary.
 
 ; specs are as follows:
-; Permitted Transactions: ChangeValidation, ReleaseFromEndowment, Transfer, TransferAndLock
-; Validation Keys: 4 ntrd Keys plus 3 pre-BPC Keys
+; Permitted Transactions: ChangeValidation, ReleaseFromEndowment, Transfer, TransferAndLock, Issue
+; Validation Keys: 4 Axiom Keys plus 3 pre-BPC Keys
 ; Validation Rules:
-;   ChangeValidation: 1 of first 2 ntrd signatures and 1 of second 2 ntrd signatures, or 2 pre-BPC signatures
+;   ChangeValidation: 1 of first 2 Axiom signatures and 1 of second 2 Axiom signatures and 1 of 3 pre-BPC signatures, or 2 pre-BPC signatures
 ;   ReleaseFromEndowment:
-;   - Up to 5,000 ndau: 1 of first 2 ntrd signatures
-;   - >5,000 - 20,000 ndau: 1 of first 2 ntrd signatures and 1 of second 2 ntrd signatures
-;   - More than 20,000 ndau: 1 of first 2 ntrd signatures and 1 of second 2 ntrd signatures and 1 of pre-BPC
-;   Transfer and TransferAndLock:
-;   - Up to 20,000 ndau: 1 of first 2 ntrd signatures
-;   - More than 20,000 ndau: 1 of first 2 ntrd signatures and 1 of second 2 ntrd signatures
+;   - Up to 5,000 ndau: 1 of first 2 Axiom signatures
+;   - >5,000 - 20,000 ndau: 1 of first 2 Axiom signatures and 1 of second 2 Axiom signatures
+;   - More than 20,000 ndau: any 3 of the 4 Axiomn signatures
+;   Transfer and TransferAndLock, and Issue:
+;   - Up to 20,000 ndau: 1 of first 2 Axiom signatures
+;   - More than 20,000 ndau: 1 of first 2 Axiom signatures and 1 of second 2 Axiom signatures
 
 ; validation key ordering:
-; 0 - ntrd Group A, Sig a
-; 1 - ntrd Group A, Sig b
-; 2 - ntrd Group B, Sig a
-; 3 - ntrd Group B, Sig b
+; 0 - Axiom Group A, Sig a
+; 1 - Axiom Group A, Sig b
+; 2 - Axiom Group B, Sig a
+; 3 - Axiom Group B, Sig b
 ; 4 - pre-bpc A
 ; 5 - pre-bpc B
 ; 6 - pre-bpc C
 
 ; bitmasks for signature groups
-NTRD_GROUPA_MASK = 0x03
-NTRD_GROUPB_MASK = 0x0C
+AXIOM_GROUPA_MASK = 0x03
+AXIOM_GROUPB_MASK = 0x0C
+AXIOM_MASK = 0x0F
 BPC_MASK = 0x70
 
 ; we don't want any event we haven't specifically handled
@@ -46,7 +48,8 @@ handler EVENT_CHANGEVALIDATION {
                                     ; number of sigs required
     GROUPA_MIN = 1
     GROUPB_MIN = 1
-    BPC_MIN = 2
+    BPC_WITH_AXIOM_MIN = 1          ; 1 of GROUPA + 1 of GROUPB + 1 of BPC_WITH_AXIOM
+    BPC_ALONE_MIN = 2               ; OR 2 of BPC_ALONE_MIN
 
                                     ; stack top on right -- sig bitmask on top, then tx, then account
                                     ;acct tx sigs
@@ -55,16 +58,24 @@ handler EVENT_CHANGEVALIDATION {
     drop2                           ;sigs
 
     push BPC_MASK                   ;sigs bpcmask
-    push BPC_MIN                    ;sigs bpcmask bpcmin
-    call EnoughSigs                 ;sigs bpcmask bpcmin enuf
-    ifnz                            ;sigs bpcmask bpcmin
-        zero                        ;sigs bpcmask bpcmin zero
+    push BPC_ALONE_MIN              ;sigs bpcmask bpcalonemin
+    call EnoughSigs                 ;sigs bpcmask bpcalonemin enuf
+    ifnz                            ;sigs bpcmask bpcalonemin
+        zero                        ;sigs bpcmask bpcalonemin zero
         ret                         ; zero is success -- >=2 bpc sigs, so it's valid
-    endif                           ;not enough bpc, so look for ntrd sigs
+    endif                           ;not enough bpc alone, so look for Axiom sigs
 
-                                    ;sigs bpcmask bpcmin
+                                    ;sigs bpcmask bpcalonemin
     drop2                           ;sigs
-    push NTRD_GROUPA_MASK           ;sigs grpamask
+    push BPC_MASK                   ;sigs bpcmask
+    push BPC_WITH_AXIOM_MIN         ;sigs bpcmask bpcwithamin
+    call EnoughSigs                 ;sigs bpcmask bpcwithamin enuf
+    ifz                             ;sigs bpcmask bpcwithamin
+        fail                        ; not enough bpc sigs
+    endif
+                                    ;sigs bpcmask bpcwithamin
+    drop2                           ;sigs
+    push AXIOM_GROUPA_MASK          ;sigs grpamask
     push GROUPA_MIN                 ;sigs grpamask grpamin
     call EnoughSigs                 ;sigs grpamask grpamin enuf
     ifz                             ;sigs grpamask grpamin
@@ -72,7 +83,7 @@ handler EVENT_CHANGEVALIDATION {
     endif
                                     ;sigs grpamask grpamin
     drop2                           ;sigs
-    push NTRD_GROUPB_MASK           ;sigs grpbmask
+    push AXIOM_GROUPB_MASK          ;sigs grpbmask
     push GROUPB_MIN                 ;sigs grpbmask grpbmin
     call EnoughSigs                 ;sigs grpbmask grpbmin enuf
     not                             ; a successful return is 0
@@ -82,7 +93,7 @@ handler EVENT_CHANGEVALIDATION {
 ; For ReleaseFromEndowment (RFE), the rule is:
 ; * we always need 1 of groupA
 ; * amt > 5000, also need 1 of groupB
-; * amt > 20000, also need 1 of pre-BPC
+; * amt > 20000, also need 1 more of either groupA or groupB
 ; We do an explicit count and gte, even for the 1s cases, because we expect that we may want to
 ; change the number of signatures someday.
 ;
@@ -94,7 +105,7 @@ handler EVENT_RELEASEFROMENDOWMENT {
                                     ; number of sigs required
     GROUPA_MIN = 1
     GROUPB_MIN = 1
-    BPC_MIN = 1
+    COMBINED_MIN = 3
 
                                     ; breakpoints for decisions
     LOW_LIMIT = nd5000
@@ -107,7 +118,7 @@ handler EVENT_RELEASEFROMENDOWMENT {
 
                                     ; check that we have at least GROUPA_MIN of groupA
                                     ;tx sigs
-    push NTRD_GROUPA_MASK           ;tx sigs grpamask
+    push AXIOM_GROUPA_MASK          ;tx sigs grpamask
     push GROUPA_MIN                 ;tx sigs grpamask grpamin
     call EnoughSigs                 ;tx sigs grpamask grpamin enuf
     ifz                             ;tx sigs grpamask grpamin
@@ -128,7 +139,7 @@ handler EVENT_RELEASEFROMENDOWMENT {
 
                                     ; check that we have at least GROUPB_MIN of groupA
                                     ;tx sigs
-    push NTRD_GROUPB_MASK           ;tx sigs grpbmask
+    push AXIOM_GROUPB_MASK          ;tx sigs grpbmask
     push GROUPB_MIN                 ;tx sigs grpbmask grpbmin
     call EnoughSigs                 ;tx sigs grpbmask grpbmin enuf
     ifz                             ;tx sigs grpbmask grpbmin
@@ -147,17 +158,17 @@ handler EVENT_RELEASEFROMENDOWMENT {
         ret
     endif
 
-                                    ; it's a big amount, look for a bpc sig
+                                    ; it's a big amount, look for three sigs
                                     ;sigs
-    push BPC_MASK                   ;sigs bpcmask
-    push BPC_MIN                    ;sigs bpcmask bpcmin
-    call EnoughSigs                 ;sigs bpcmask bpcmin enuf
+    push AXIOM_MASK                 ;sigs axiommask
+    push COMBINED_MIN               ;sigs axiommask combinedmin
+    call EnoughSigs                 ;sigs axiommask combinedmin enuf
     not                             ; if true, then valid, if false, invalid
 }
 
 ;   Transfer and TransferAndLock:
-;   - Up to 20,000 ndau: 1 of first 2 ntrd signatures
-;   - More than 20,000 ndau: 1 of first 2 ntrd signatures and 1 of second 2 ntrd signatures
+;   - Up to 20,000 ndau: 1 of first 2 Axiom signatures
+;   - More than 20,000 ndau: 1 of first 2 Axiom signatures and 1 of second 2 Axiom signatures
 
 
 ; For EventTransfer, the rule is:
@@ -168,7 +179,7 @@ handler EVENT_RELEASEFROMENDOWMENT {
 ;    account
 ;    transaction
 ;    bitmask of which authorized keys were found in the signature list
-handler EVENT_TRANSFER, EVENT_TRANSFERANDLOCK {
+handler EVENT_TRANSFER, EVENT_TRANSFERANDLOCK, EVENT_ISSUE {
                                     ; number of sigs required
     GROUPA_MIN = 1
     GROUPB_MIN = 1
@@ -183,7 +194,7 @@ handler EVENT_TRANSFER, EVENT_TRANSFERANDLOCK {
 
                                     ; check that we have at least GROUPA_MIN of groupA
                                     ;tx sigs
-    push NTRD_GROUPA_MASK           ;tx sigs grpamask
+    push AXIOM_GROUPA_MASK           ;tx sigs grpamask
     push GROUPA_MIN                 ;tx sigs grpamask grpamin
     call EnoughSigs                 ;tx sigs grpamask grpamin enuf
     ifz                             ;tx sigs grpamask grpamin
@@ -204,7 +215,7 @@ handler EVENT_TRANSFER, EVENT_TRANSFERANDLOCK {
 
                                     ; it's a big amount, look for a sig from grpb
                                     ;sigs
-    push NTRD_GROUPB_MASK           ;sigs grpbmask
+    push AXIOM_GROUPB_MASK           ;sigs grpbmask
     push GROUPB_MIN                 ;sigs grpbmask grpbmin
     call EnoughSigs                 ;sigs grpbmask grpbmin enuf
     not                             ; if EnoughSigs was true, then succeed

@@ -3,7 +3,7 @@ VAR sig = 01,10,11
 
 BEGIN_TEMPLATE
 ; testing this file
-load ../operations.chbin
+load ../ntrd.chbin
 
 ; ===== DELEGATE =====
 ; make sure that various normal transactions are allowed with just one sig

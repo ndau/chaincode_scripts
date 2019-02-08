@@ -1,0 +1,16 @@
+VAR sig = 011,110,101,111
+
+BEGIN_TEMPLATE
+; testing this file
+load ../ntrd.chbin
+
+;===== EVENT_CHANGEVALIDATION =====
+;   ChangeValidation: 2 of 3 signatures
+
+; test with combinations of 2 or 3 -- all should succeed
+clear
+push 0
+push { TX_QUANTITY: nd100 }
+push 0b_$sig
+event EVENT_CHANGEVALIDATION
+run succeed
