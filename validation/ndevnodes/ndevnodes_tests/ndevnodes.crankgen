@@ -1,0 +1,29 @@
+VAR event = EVENT_CHANGEVALIDATION, EVENT_TRANSFER, EVENT_LOCK, EVENT_NOTIFY, EVENT_REGISTERNODE, EVENT_UNSTAKE
+VAR sigf = 0x01, 0x02, 0x03
+VAR sigs = 0x07, 0x0E
+
+BEGIN_TEMPLATE
+load ../ndevnodes.chbin
+
+; - Permitted Transactions: ChangeValidation, CreditEAI, ClaimNodeReward, Transfer,
+;                           Lock, Notify, Delegate, Unstake, RegisterNode
+; - Validation Keys: node key plus 3 ndev keys
+; - Validation Rules:
+;     - CreditEAI, ClaimNodeReward: any signature
+;     - All others listed: 2 of 3 ndev signatures
+
+; no more than 1 ndev sig should fail
+clear
+push 0
+push { TX_QUANTITY: nd100 }
+push $sigf
+event $event
+run fail
+
+; any 2 ndev sigs should succeed
+clear
+push 0
+push { TX_QUANTITY: nd100 }
+push $sigs
+event $event
+run succeed

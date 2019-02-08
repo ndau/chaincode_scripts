@@ -1,0 +1,44 @@
+; ndev nodes
+; Permitted Transactions:   ChangeValidation, CreditEAI, ClaimNodeReward, Transfer,
+;                           Lock, Notify, Delegate, Unstake, RegisterNode
+; Validation Keys: node key, 3 ndev Keys
+; Validation Rules:
+
+;   CreditEAI, ClaimReward: any one key
+;   ChangeValidation, Transfer, Lock, Notify, RegisterNode, Unstake: 2 of 3 ndev keys
+
+
+handler EVENT_DEFAULT {
+    fail                            ; anything not permitted is prohibited
+}
+
+handler EVENT_CREDITEAI, EVENT_CLAIMNODEREWARD {
+    zero                            ; any signature is acceptable
+}
+handler EVENT_CHANGEVALIDATION, EVENT_TRANSFER, EVENT_LOCK, EVENT_NOTIFY, EVENT_REGISTERNODE, EVENT_UNSTAKE {
+
+                                    ; stack top on right -- sig bitmask on top, then tx, then account
+                                    ; get rid of acct since we don't need to look at it
+                                    ;acct tx sigs
+    roll 2                          ;tx sigs acct
+    drop                            ;tx sigs
+
+    NDEV_MASK = 0x0E
+    NDEV_MIN = 2
+                                    ; check that we have at least NDEV_MIN
+                                    ;tx sigs
+    push NDEV_MASK                  ;tx sigs ndevmask
+    push NDEV_MIN                   ;tx sigs ndevmask ndevmin
+    call EnoughSigs                 ;tx sigs ndevmask ndevmin enuf
+    ifz                             ;tx sigs ndevmask ndevmin
+        fail                        ; not enough ndev sigs
+    endif
+}
+
+func EnoughSigs(3) {
+                                    ;sigs countmask required
+    tuck 2                          ;required sigs countmask
+    and                             ;required sigs_to_consider
+    count1s                         ;required num_found
+    lte                             ;(num_found >= required)
+}
