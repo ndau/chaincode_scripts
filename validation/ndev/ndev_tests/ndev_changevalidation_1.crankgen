@@ -1,16 +1,17 @@
-VAR sig = 011,110,101,111
+VAR sig = 001,010,100
 
 BEGIN_TEMPLATE
 ; testing this file
-load ../operations.chbin
+load ../ndev.chbin
 
 ;===== EVENT_CHANGEVALIDATION =====
 ;   ChangeValidation: 2 of 3 signatures
+;   All others: 1 signature
 
-; test with combinations of 2 or 3 -- all should succeed
+; expect a failure for 1 ntrd of each of the possible combinations
 clear
 push 0
 push { TX_QUANTITY: nd100 }
 push 0b_$sig
 event EVENT_CHANGEVALIDATION
-run succeed
+run fail

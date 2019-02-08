@@ -1,0 +1,57 @@
+VAR event = EVENT_CHANGEVALIDATION
+
+BEGIN_TEMPLATE
+load ../axiom.chbin
+
+; - Permitted Transactions: ChangeValidation
+; - Validation Keys: 3 pre-BPC keys, two sets of two Axiom keys (Axiom A, Axiom B)
+; - Validation Rules:
+;     - ChangeValidation: 2 pre-BPC signatures OR 1 signature from each of pre-BPC, Axiom A, Axiom B
+
+; one signature from each group should succeed
+clear
+push 0
+push { TX_QUANTITY: nd100 }
+push 0b_001_01_01
+event $event
+run succeed
+
+; signatures from two out of three groups should fail
+clear
+push 0
+push { TX_QUANTITY: nd100 }
+push 0b_001_00_01
+event $event
+run fail
+
+; signatures from a different two out of three groups should fail
+clear
+push 0
+push { TX_QUANTITY: nd100 }
+push 0b_001_01_00
+event $event
+run fail
+
+; signatures from the third two out of three groups should also fail
+clear
+push 0
+push { TX_QUANTITY: nd100 }
+push 0b_00_01_01
+event $event
+run fail
+
+; one pre-BPC signature
+clear
+push 0
+push { TX_QUANTITY: nd100 }
+push 0b_001_00_00
+event $event
+run fail
+
+; two pre-BPC signatures should succeed
+clear
+push 0
+push { TX_QUANTITY: nd100 }
+push 0b_011_00_00
+event $event
+run succeed

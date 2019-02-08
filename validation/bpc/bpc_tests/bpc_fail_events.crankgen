@@ -2,7 +2,7 @@ VAR event = EVENT_TRANSFER, EVENT_RELEASEFROMENDOWMENT, EVENT_CHANGESETTLEMENTPE
 VAR bpc = 111
 
 BEGIN_TEMPLATE
-load ../bpc_operations.chbin
+load ../bpc.chbin
 
 ; - Permitted Transactions: ChangeValidation, SidechainTx, Chaos Chain Update
 ; - Validation Keys: 3 pre-BPC Keys

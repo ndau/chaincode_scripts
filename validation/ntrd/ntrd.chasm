@@ -1,0 +1,21 @@
+; ntrd Operations
+; Permitted Transactions: All
+; Validation Keys: 3 ntrd Keys
+; Validation Rules:
+
+;   ChangeValidation: 2 of 3 signatures
+;   All others: 1 signature
+
+
+handler EVENT_DEFAULT {
+    zero                            ; chaincode can Just Succeed, here, because
+                                    ; we validate that at least one signature
+                                    ; is valid
+}
+
+handler EVENT_CHANGEVALIDATION {
+                                    ; ... sigs
+    count1s                         ; nsecond_sigs
+    push 2                          ; nsecond_sigs 2
+    lt                              ; true (fail) if there are less than 2 sigs
+}
