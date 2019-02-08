@@ -7,7 +7,7 @@ We organize them by the chaincode "context". Validation scripts are stored under
 # Validation
 In general, two user stories are currently supported:
 
-- Special accounts associated with Ndau get bespoke scripts
+- Special accounts associated with ndau get bespoke scripts
 - A selection of generic validation scripts is available for use by ndau users
 
 ## Validation Context
