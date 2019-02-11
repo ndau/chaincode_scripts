@@ -16,8 +16,21 @@ handler EVENT_DEFAULT {
     zero                            ; if we add a tx and don't specify its fee, it's free!
 }
 
-handler EVENT_CLAIMACCOUNT {
+handler EVENT_CLAIMACCOUNT, EVENT_CHANGEVALIDATION, EVENT_SIDECHAINTX {
     call default
+}
+
+handler EVENT_CHANGESETTLEMENTPERIOD, EVENT_DELEGATE, EVENT_LOCK, EVENT_NOTIFY, EVENT_CREDITEAI, EVENT_CLAIMNODEREWARD, EVENT_NOMINATENODEREWARD, EVENT_COMMANDVALIDATORCHANGE, EVENT_SETREWARDSDESTINATION, EVENT_UNSTAKE, EVENT_ISSUE {
+    push FIVE_PERCENT
+}
+
+handler EVENT_STAKE, EVENT_REGISTERNODE, EVENT_UNREGISTERNODE {
+    push NDAU
+}
+
+handler EVENT_RELEASEFROMENDOWMENT {
+    push 1000
+    call clamped_qtydiv
 }
 
 ; 0.5% of amount, 0.05 ndau minimum, 5 ndau maximum
@@ -30,72 +43,6 @@ handler EVENT_TRANSFERANDLOCK {
     call transfer
     push FIVE_PERCENT
     add
-}
-
-handler EVENT_CHANGESETTLEMENTPERIOD {
-    push FIVE_PERCENT
-}
-
-handler EVENT_CHANGEVALIDATION {
-    call default
-}
-
-handler EVENT_SIDECHAINTX {
-    call default
-}
-
-handler EVENT_DELEGATE {
-    push FIVE_PERCENT
-}
-
-handler EVENT_LOCK {
-    push FIVE_PERCENT
-}
-handler EVENT_NOTIFY {
-    push FIVE_PERCENT
-}
-
-handler EVENT_STAKE {
-    push NDAU
-}
-handler EVENT_REGISTERNODE {
-    push NDAU
-}
-
-handler EVENT_CREDITEAI {
-    push FIVE_PERCENT
-}
-
-handler EVENT_CLAIMNODEREWARD {
-    push FIVE_PERCENT
-}
-
-handler EVENT_RELEASEFROMENDOWMENT {
-    push 1000
-    call clamped_qtydiv
-}
-
-handler EVENT_NOMINATENODEREWARD {
-    push FIVE_PERCENT
-}
-handler EVENT_COMMANDVALIDATORCHANGE {
-    push FIVE_PERCENT
-}
-
-handler EVENT_SETREWARDSDESTINATION {
-    push FIVE_PERCENT
-}
-
-handler EVENT_UNREGISTERNODE {
-    push NDAU
-}
-
-handler EVENT_UNSTAKE {
-    push FIVE_PERCENT
-}
-
-handler EVENT_ISSUE {
-    push FIVE_PERCENT
 }
 
 ; default size-based calculation
