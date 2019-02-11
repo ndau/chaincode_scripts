@@ -82,6 +82,21 @@ handler EVENT_COMMANDVALIDATORCHANGE {
     push FIVE_PERCENT
 }
 
+handler EVENT_SETREWARDSDESTINATION {
+    push FIVE_PERCENT
+}
+
+handler EVENT_UNREGISTERNODE {
+    push NDAU
+}
+
+handler EVENT_UNSTAKE {
+    push FIVE_PERCENT
+}
+
+handler EVENT_ISSUE {
+    push FIVE_PERCENT
+}
 
 ; default size-based calculation
 ; 0.05 ndau + 0.0001 ndau/byte
