@@ -29,9 +29,9 @@
 ; - at any other point, RATE lies on the straight line defined by
 ;   ACTIVATE_THRESHOLD, CAP_THRESHOLD, and CAP.
 
-ACTIVATE_THRESHOLD = 95             ;PCT
-CAP_THRESHOLD = 50                  ;PCT
-CAP = 50                            ;PCT
+ACTIVATE_THRESHOLD = 950000000000   ; rate
+CAP_THRESHOLD = 500000000000        ; rate
+CAP = 500000000000                  ; rate
 
 ; don't change this
 RATE_DENOMINATOR = 1000000000000    ; 10^12
@@ -45,11 +45,8 @@ handler EVENT_DEFAULT {
     ;; return zero if gte ACTIVATE_THRESHOLD
 
     dup                             ; price_frac price_frac
-    dup                             ; price_frac price_frac price_frac
-    push ACTIVATE_THRESHOLD         ; price_frac price_frac price_frac ACTIVATE_THRESHOLD
-    push 100                        ; price_frac price_frac price_frac ACTIVATE_THRESHOLD 100
-    muldiv                          ; price_frac price_frac activate
-    gte                             ; price_frac (price_frac >= activate)
+    push ACTIVATE_THRESHOLD         ; price_frac price_frac ACTIVATE_THRESHOLD
+    gte                             ; price_frac (price_frac >= ACTIVATE_THRESHOLD)
     ifnz                            ;; if true
         zero
         ret
@@ -58,16 +55,10 @@ handler EVENT_DEFAULT {
     ;; return CAP if lte CAP_THRESHOLD
 
     dup                             ; price_frac price_frac
-    dup                             ; price_frac price_frac price_frac
-    push CAP_THRESHOLD              ; price_frac price_frac price_frac CAP_THRESHOLD
-    push 100                        ; price_frac price_frac price_frac CAP_THRESHOLD 100
-    muldiv                          ; price_frac price_frac cap
-    lte                             ; price_frac (price_frac <= cap)
+    push CAP_THRESHOLD              ; price_frac price_frac CAP_THRESHOLD
+    lte                             ; price_frac (price_frac <= CAP_THRESHOLD)
     ifnz                            ;; if true
-        push RATE_DENOMINATOR
         push CAP
-        push 100
-        muldiv
         ret
     endif                           ; price_frac
 
@@ -85,6 +76,7 @@ handler EVENT_DEFAULT {
 
     push CAP                        ; price_frac CAP
     swap                            ; CAP price_frac
+
     push CAP_THRESHOLD              ; CAP price_frac CAP_THRESHOLD
     sub                             ; CAP (price_frac-CAP_THRESHOLD)
 
