@@ -1,0 +1,92 @@
+; SIB calculation
+;
+; Stabilization Incentive Burn disincentivizes ndau sales when the market
+; price is below the target price. It does so by assuming that all transfers
+; within that period are sales, and adds extra fees to the seller. How much
+; fee? That's the point of this script.
+;
+; Expected stack at input:
+;
+;   TARGET PRICE (top)
+;   MARKET PRICE
+;
+; These prices must be integers expressed with sufficient precision to accurately
+; determine proportionality. Expressing them as cents is sufficient precision
+; if the prices are denominated in dollars.
+;
+; Expected output:
+;
+;   RATE (int): a number which when divided by constants.RateDenominator
+;               results in a multiplier. This value will be multiplied by
+;               the tx qty and divided by constants.RateDenominator to
+;               produce the actual qty of SIB for that tx.
+;
+; The function implemented in this script has the following properties:
+; - if market price is greater than or equal to ACTIVATE_THRESHOLD% of target
+;   price, RATE is 0
+; - if market price is less than or equal to CAP_THRESHOLD% of target price,
+;   RATE is CAP% (scaled to the constant)
+; - at any other point, RATE lies on the straight line defined by
+;   ACTIVATE_THRESHOLD, CAP_THRESHOLD, and CAP.
+
+ACTIVATE_THRESHOLD = 950000000000   ; rate
+CAP_THRESHOLD = 500000000000        ; rate
+CAP = 500000000000                  ; rate
+
+; don't change this
+RATE_DENOMINATOR = 1000000000000    ; 10^12
+
+handler EVENT_DEFAULT {
+                                    ; market target
+    push RATE_DENOMINATOR           ; market target RATE_DENOMINATOR
+    tuck 2                          ; RATE_DENOMINATOR market target
+    muldiv                          ; price_frac
+
+    ;; return zero if gte ACTIVATE_THRESHOLD
+
+    dup                             ; price_frac price_frac
+    push ACTIVATE_THRESHOLD         ; price_frac price_frac ACTIVATE_THRESHOLD
+    gte                             ; price_frac (price_frac >= ACTIVATE_THRESHOLD)
+    ifnz                            ;; if true
+        zero
+        ret
+    endif                           ; price_frac
+
+    ;; return CAP if lte CAP_THRESHOLD
+
+    dup                             ; price_frac price_frac
+    push CAP_THRESHOLD              ; price_frac price_frac CAP_THRESHOLD
+    lte                             ; price_frac (price_frac <= CAP_THRESHOLD)
+    ifnz                            ;; if true
+        push CAP
+        ret
+    endif                           ; price_frac
+
+    ;; figure out the linear interpolation
+    ;;
+    ;; y = y0 + (x - x0)*(y1-y0)/(x1-x0)
+    ;;
+    ;; x = price_frac
+    ;; x0 = CAP_THRESHOLD
+    ;; y0 = CAP
+    ;; x1 = ACTIVATE_THRESHOLD
+    ;; y1 = 0
+    ;;
+    ;; y = CAP + (price_frac - CAP_THRESHOLD)*(0-CAP)/(ACTIVATE_THRESHOLD-CAP_THRESHOLD)
+
+    push CAP                        ; price_frac CAP
+    swap                            ; CAP price_frac
+
+    push CAP_THRESHOLD              ; CAP price_frac CAP_THRESHOLD
+    sub                             ; CAP (price_frac-CAP_THRESHOLD)
+
+    push CAP                        ; CAP (price_frac-CAP_THRESHOLD) CAP
+    neg                             ; CAP (price_frac-CAP_THRESHOLD) (-CAP)
+
+    push ACTIVATE_THRESHOLD         ; CAP (price_frac-CAP_THRESHOLD) (-CAP) ACTIVATE_THRESHOLD
+    push CAP_THRESHOLD              ; CAP (price_frac-CAP_THRESHOLD) (-CAP) ACTIVATE_THRESHOLD CAP_THRESHOLD
+    sub                             ; CAP (price_frac-CAP_THRESHOLD) (-CAP) (ACTIVATE_THRESHOLD-CAP_THRESHOLD)
+
+    muldiv                          ; CAP ((price_frac - CAP_THRESHOLD)*(0-CAP)/(ACTIVATE_THRESHOLD-CAP_THRESHOLD))
+    add
+}

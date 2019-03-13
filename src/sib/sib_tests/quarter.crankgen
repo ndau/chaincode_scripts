@@ -1,0 +1,13 @@
+BEGIN_TEMPLATE
+; testing this file
+load ../sib.chbin
+
+; set up preconditions
+clear
+push 8375       ;market
+push 10000      ;target
+event 0
+
+run
+
+expect 125000000000
