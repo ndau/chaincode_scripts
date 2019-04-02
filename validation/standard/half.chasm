@@ -1,4 +1,4 @@
-; majority calculation -- requires at least half of all keys to sign
+; half or more calculation -- requires at least half of all keys to sign
 ;
 ; Expected arguments on the stack in order from bottom to top are:
 ;    account
@@ -15,5 +15,5 @@ handler EVENT_DEFAULT {
     swap                            ;tx nkeys nsigs
     dup                             ;tx nkeys nsigs nsigs
     add                             ;tx nkeys 2*nsigs
-    gte                             ;tx (true (fail) if nkeys < 2*nsigs)
+    gt                              ;tx (true (fail) if nkeys > 2*nsigs)
 }
