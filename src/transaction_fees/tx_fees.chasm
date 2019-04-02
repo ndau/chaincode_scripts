@@ -16,7 +16,7 @@ handler EVENT_DEFAULT {
     zero                            ; if we add a tx and don't specify its fee, it's free!
 }
 
-handler EVENT_CLAIMACCOUNT, EVENT_CHANGEVALIDATION, EVENT_SIDECHAINTX {
+handler EVENT_CLAIMACCOUNT, EVENT_CHANGEVALIDATION {
     call default
 }
 

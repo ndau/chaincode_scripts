@@ -17,11 +17,6 @@ handler EVENT_CHANGEVALIDATION {
     not                             ; 0 is a good return
 }
 
-handler EVENT_SIDECHAINTX {
-    call EnoughSigs
-    not                             ; 0 is a good return
-}
-
 ; EnoughSigs returns true if there are enough sigs
 func EnoughSigs(1) {
     MIN_SIGS = 2
