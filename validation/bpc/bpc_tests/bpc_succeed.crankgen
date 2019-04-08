@@ -1,16 +1,13 @@
-VAR event = EVENT_CHANGEVALIDATION, EVENT_SIDECHAINTX
+VAR event = EVENT_CHANGEVALIDATION
 VAR bpc = 011,101,110,111
 
 BEGIN_TEMPLATE
 load ../bpc.chbin
 
-; - Permitted Transactions: ChangeValidation, SidechainTx, Chaos Chain Update
+; - Permitted Transactions: ChangeValidation
 ; - Validation Keys: 3 pre-BPC Keys
 ; - Validation Rules:
 ;     - ChangeValidation: 2 signatures
-;     - SidechainTx: 2 signatures
-;     - Chaos Chain Update: 2 signatures
-
 
 clear
 push 0

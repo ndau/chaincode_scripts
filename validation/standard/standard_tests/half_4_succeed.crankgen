@@ -1,0 +1,14 @@
+VAR sig = 0011,0101,0110,1010,1100,0111,1011,1101,1110,1111
+
+BEGIN_TEMPLATE
+; testing this file
+load ../half.chbin
+
+; test half or more for 4
+
+; 4 signers need 2 or more sigs
+clear
+push { ACCT_VALIDATIONKEYS: [ 1 2 3 4] }
+push 0   ; the tx doesn't matter
+push 0b_$sig
+run succeed
