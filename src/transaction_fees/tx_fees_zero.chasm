@@ -1,0 +1,12 @@
+; transaction fees have a very simple initial stack:
+; (top) the transaction
+;       size of the transaction in bytes
+; to return successfully, they must exit with a number on top of the stack;
+; this number is the tx fee in napu
+
+; At genesis, there are no transaction fees. Fees are imposed after the first
+; few transactions, which would otherwise have no funds to pay their fees.
+
+handler EVENT_DEFAULT {
+    zero
+}

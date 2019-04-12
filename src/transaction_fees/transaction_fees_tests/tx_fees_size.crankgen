@@ -1,0 +1,17 @@
+VAR event = EVENT_SETVALIDATION, EVENT_CHANGEVALIDATION, EVENT_CREATECHILDACCOUNT
+VAR size = 1, 2, 4, 64, 256, 8192
+VAR base_fee_ndau = 0.05
+VAR fee_per_byte_ndau = 0.0001
+VAR ndau_to_napu = 100000000
+
+BEGIN_TEMPLATE
+load ../tx_fees.chbin
+
+; Transactions with a fee based on transaction size
+
+clear
+push $size
+push { TX_NEWKEYS:  [1 2 3] }
+event $event
+run
+expect {-{int ((($size * $fee_per_byte_ndau) + $base_fee_ndau) * $ndau_to_napu)}-}
