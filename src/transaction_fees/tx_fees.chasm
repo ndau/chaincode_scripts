@@ -4,68 +4,62 @@
 ; to return successfully, they must exit with a number on top of the stack;
 ; this number is the tx fee in napu
 
-NDAU = 100000000
-ONE_PERCENT = 1000000
+NDAU =       100000000
 FIVE_PERCENT = 5000000
-TENTHOUSANDTH = 10000
+ONE_PERCENT =  1000000
+HALF_PERCENT_DIV =     200      ; Divide by 200 to get 0.5%
+TENTH_PERCENT_DIV =   1000      ; Divide by 1000 to get 0.1%
+TENTHOUSANDTH =  10000
 
-CLAMP_MIN = 5000000
-CLAMP_MAX = 500000000
+LOCK_EXTRA =   5000000          ; Extra fee added to Transfer for Transfer And Lock
+CLAMP_MIN =    5000000          ; Minimum/maximum fees for Release From Endowment and Transfer/Transfer And Lock
+CLAMP_MAX =  500000000
+
+; Most transactions have a default fee of 0.05 ndau:
 
 handler EVENT_DEFAULT {
-    zero                            ; if we add a tx and don't specify its fee, it's free!
-}
-
-handler EVENT_CLAIMACCOUNT, EVENT_CHANGEVALIDATION {
-    call default
-}
-
-handler EVENT_CHANGESETTLEMENTPERIOD, EVENT_DELEGATE, EVENT_LOCK, EVENT_NOTIFY, EVENT_CREDITEAI, EVENT_CLAIMNODEREWARD, EVENT_NOMINATENODEREWARD, EVENT_COMMANDVALIDATORCHANGE, EVENT_SETREWARDSDESTINATION, EVENT_UNSTAKE, EVENT_ISSUE {
-    push FIVE_PERCENT
+    push FIVE_PERCENT           ; Free transactions invite spam: don't risk letting anything be free
 }
 
 handler EVENT_STAKE, EVENT_REGISTERNODE, EVENT_UNREGISTERNODE {
-    push NDAU
+    push NDAU                   ; Fee is 1 ndau
+}
+
+handler EVENT_SETVALIDATION, EVENT_CHANGEVALIDATION, EVENT_CREATECHILDACCOUNT {
+    call size
 }
 
 handler EVENT_RELEASEFROMENDOWMENT {
-    push 1000
+    push TENTH_PERCENT_DIV       ; Fee is 0.1%, 0.05 ndau minimum, 5 ndau maximum
     call clamped_qtydiv
 }
 
-; 0.5% of amount, 0.05 ndau minimum, 5 ndau maximum
 handler EVENT_TRANSFER {
-    call transfer
+    push HALF_PERCENT_DIV       ; Fee is 0.5%, 0.05 ndau minimum, 5 ndau maximum
+    call clamped_qtydiv
 }
 
-; Transfer fee + 0.05 ndau
 handler EVENT_TRANSFERANDLOCK {
-    call transfer
-    push FIVE_PERCENT
+    push HALF_PERCENT_DIV       ; Same as transfer (0.5%, 0.05 ndau minimum, 5 ndau maximum)
+    call clamped_qtydiv
+    push FIVE_PERCENT           ; Plus 0.05 ndau
     add
 }
 
-; default size-based calculation
+; size-based calculation
 ; 0.05 ndau + 0.0001 ndau/byte
 ; expects to be called immediately, so the initial stack is size tx
-func default(2) {
-    swap                            ; tx size
-    push TENTHOUSANDTH              ; ... size TENTHOUSANDTH
-    mul                             ; (size * TENTHOUSANDTH)
-    push FIVE_PERCENT
-    add
-}
 
-; default transfer calculation
-; 0.5% of amount, 0.05 ndau minimum, 5 ndau maximum
-; expects to be called immediately, so the initial stack is size tx
-func transfer(2) {
+func size(2) {
                                     ; size tx
-    push 200                        ; size tx 200
-    call clamped_qtydiv
+    swap                            ; tx size
+    push TENTHOUSANDTH              ; tx size TENTHOUSANDTH
+    mul                             ; tx (size * TENTHOUSANDTH)
+    push FIVE_PERCENT               ; tx product 0.005
+    add                             ; tx fee
 }
 
-; clamped value of tx_qty
+; clamped value of tx_qty divided by div
 ; expects size tx divisor
 ; gets the tx qty, divides by the divisor, multiplies, clamps
 func clamped_qtydiv(3) {
@@ -84,7 +78,7 @@ func clamp(1) {
     push CLAMP_MIN                  ; value value CLAMP_MIN
     lt                              ; value (value < CLAMP_MIN)
     ifnz
-        push CLAMP_MIN
+        push CLAMP_MIN              ; (return minimum fee)
         ret
     endif
                                     ; value
@@ -92,8 +86,7 @@ func clamp(1) {
     push CLAMP_MAX                  ; value value CLAMP_MAX
     gt                              ; value (value > CLAMP_MAX)
     ifnz
-        push CLAMP_MAX
+        push CLAMP_MAX              ; (return maximum fee)
         ret
     endif
-                                    ; value
 }

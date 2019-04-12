@@ -1,0 +1,15 @@
+VAR event = EVENT_REGISTERNODE, EVENT_UNREGISTERNODE, EVENT_STAKE
+VAR fee_ndau = 1
+VAR ndau_to_napu = 100000000
+
+BEGIN_TEMPLATE
+load ../tx_fees.chbin
+
+; All transactions with a fee of 1 ndau
+
+clear
+push 0               ; size doesn't matter
+push { TX_VALUE: 1 } ; transaction contents don't matter
+event $event
+run
+expect {-{int ($fee_ndau * $ndau_to_napu)}-}

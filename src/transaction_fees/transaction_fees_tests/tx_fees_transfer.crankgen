@@ -1,0 +1,18 @@
+VAR event = EVENT_TRANSFER
+VAR qty = 0.00000001, 0.002, 600, 40000, 500000
+VAR rate = 0.005
+VAR minfee =   0.05
+VAR maxfee = 5
+VAR ndau_to_napu = 100000000
+
+BEGIN_TEMPLATE
+load ../tx_fees.chbin
+
+; Transfer - 0.5% of amount, minimum 0.05 ndau, maximum 5 ndau
+
+clear
+push 0      ; size of transaction - unimportant
+push { TX_QUANTITY:  {-{ int($qty * $ndau_to_napu) }-} }
+event $event
+run
+expect {-{int (max (min ($qty * $rate, $maxfee), $minfee) * $ndau_to_napu)}-}

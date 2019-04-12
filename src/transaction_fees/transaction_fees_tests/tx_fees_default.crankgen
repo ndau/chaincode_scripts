@@ -1,0 +1,15 @@
+VAR event = EVENT_DEFAULT, EVENT_CHANGERECOURSEPERIOD, EVENT_DELEGATE, EVENT_CREDITEAI, EVENT_LOCK, EVENT_NOTIFY, EVENT_SETREWARDSDESTINATION, EVENT_NOMINATENODEREWARD, EVENT_CLAIMNODEREWARD, EVENT_COMMANDVALIDATORCHANGE, EVENT_UNSTAKE, EVENT_ISSUE, EVENT_RECORDPRICE, EVENT_SETSYSVAR
+VAR fee_ndau = 0.05
+VAR ndau_to_napu = 100000000
+
+BEGIN_TEMPLATE
+load ../tx_fees.chbin
+
+; All transactions with a default fee of 0.05 ndau
+
+clear
+push 0               ; size doesn't matter
+push { TX_VALUE: 1 } ; transaction contents don't matter
+event $event
+run
+expect {-{int ($fee_ndau * $ndau_to_napu)}-}
