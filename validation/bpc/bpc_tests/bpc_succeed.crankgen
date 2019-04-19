@@ -1,13 +1,14 @@
-VAR event = EVENT_CHANGEVALIDATION
+VAR event = EVENT_CHANGEVALIDATION, EVENT_SETSYSVAR
 VAR bpc = 011,101,110,111
 
 BEGIN_TEMPLATE
 load ../bpc.chbin
 
-; - Permitted Transactions: ChangeValidation
+; - Permitted Transactions: ChangeValidation, SetSysvar
 ; - Validation Keys: 3 pre-BPC Keys
 ; - Validation Rules:
 ;     - ChangeValidation: 2 signatures
+;     - SetSysvar: 2 signatures
 
 clear
 push 0

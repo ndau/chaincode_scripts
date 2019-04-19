@@ -1,15 +1,19 @@
 ; BPC operations validation script
 ; # BPC Operations
 ;
-; - Permitted Transactions: ChangeValidation, SidechainTx, Chaos Chain Update
+; - Permitted Transactions: ChangeValidation, SetSysvar
 ; - Validation Keys: 3 pre-BPC Keys
 ; - Validation Rules:
 ;     - ChangeValidation: 2 signatures
-;     - SidechainTx: 2 signatures
-;     - Chaos Chain Update: 2 signatures
+;     - SetSysvars: 2 signatures
 
 handler EVENT_DEFAULT {
     fail                            ; allow nothing we haven't explicitly permitted
+}
+
+handler EVENT_SETSYSVAR {
+    call EnoughSigs
+    not                             ; 0 is a good return
 }
 
 handler EVENT_CHANGEVALIDATION {
@@ -20,7 +24,6 @@ handler EVENT_CHANGEVALIDATION {
 ; EnoughSigs returns true if there are enough sigs
 func EnoughSigs(1) {
     MIN_SIGS = 2
-
                                     ; only item on stack will be the sigs bitmask
     count1s                         ; nsigs
     push MIN_SIGS                   ; nsigs minsigs
