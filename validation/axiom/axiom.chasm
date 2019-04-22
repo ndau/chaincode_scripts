@@ -2,10 +2,11 @@
 ; the BPC has no role in these operations but in its oversight role may change these validation rules if necessary.
 
 ; specs are as follows:
-; Permitted Transactions: ChangeValidation, ReleaseFromEndowment, Transfer, TransferAndLock, Issue
+; Permitted Transactions: ChangeValidation, ReleaseFromEndowment, Transfer, TransferAndLock, Issue, RecordPrice
 ; Validation Keys: 4 Axiom Keys plus 3 pre-BPC Keys
 ; Validation Rules:
 ;   ChangeValidation: 1 of first 2 Axiom signatures and 1 of second 2 Axiom signatures and 1 of 3 pre-BPC signatures, or 2 pre-BPC signatures
+;   RecordPrice: Any two signatures
 ;   ReleaseFromEndowment:
 ;   - Up to 5,000 ndau: 1 of first 2 Axiom signatures
 ;   - >5,000 - 20,000 ndau: 1 of first 2 Axiom signatures and 1 of second 2 Axiom signatures
@@ -32,6 +33,15 @@ BPC_MASK = 0x70
 ; we don't want any event we haven't specifically handled
 handler EVENT_DEFAULT {
     fail
+}
+
+handler EVENT_RECORDPRICE {
+    MIN_SIGS = 2
+                                    ; only item on stack will be the sigs bitmask
+    count1s                         ; nsigs
+    push MIN_SIGS                   ; nsigs minsigs
+    gte                             ; (nsigs >= minsigs)
+    not                             ; zero is a good return
 }
 
 ; For ChangeValidation, the rule is:
