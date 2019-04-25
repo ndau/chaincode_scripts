@@ -1,15 +1,14 @@
-VAR event = EVENT_CHANGEVALIDATION, EVENT_SIDECHAINTX
+VAR event = EVENT_CHANGEVALIDATION, EVENT_SETSYSVAR
 VAR bpc = 000,001,010,100
 
 BEGIN_TEMPLATE
 load ../bpc.chbin
 
-; - Permitted Transactions: ChangeValidation, SidechainTx, Chaos Chain Update
+; - Permitted Transactions: ChangeValidation, SetSysvar
 ; - Validation Keys: 3 pre-BPC Keys
 ; - Validation Rules:
 ;     - ChangeValidation: 2 signatures
-;     - SidechainTx: 2 signatures
-;     - Chaos Chain Update: 2 signatures
+;     - SetSysvar: 2 signatures
 
 ; valid events should fail with insufficient keys
 clear
