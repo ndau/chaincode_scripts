@@ -1,14 +1,14 @@
 VAR event = EVENT_RELEASEFROMENDOWMENT
 VAR qty = 0.00000001, 0.002, 600, 40000, 500000
 VAR rate = 0.001
-VAR minfee = 0.05
-VAR maxfee = 5
+VAR minfee = 0.005
+VAR maxfee = 0.5
 VAR ndau_to_napu = 100000000
 
 BEGIN_TEMPLATE
 load ../tx_fees.chbin
 
-; Release from Endowment - 0.1% of amount, minimum 0.05 ndau, maximum 5 ndau
+; Release from Endowment - 0.1% of amount, minimum 0.005 ndau, maximum 0.5 ndau
 
 clear
 push 0      ; size of transaction - unimportant

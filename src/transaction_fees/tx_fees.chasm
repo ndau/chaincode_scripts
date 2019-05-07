@@ -1,24 +1,29 @@
-; transaction fees have a very simple initial stack:
+; Transaction fees have a very simple initial stack:
 ; (top) the transaction
 ;       size of the transaction in bytes
 ; to return successfully, they must exit with a number on top of the stack;
 ; this number is the tx fee in napu
 
-NDAU =       100000000
-FIVE_PERCENT = 5000000
-ONE_PERCENT =  1000000
+NDAU =           100000000
+FIVE_THOUSANDTHS =  500000
+ONE_PERCENT =      1000000
 HALF_PERCENT_DIV =     200      ; Divide by 200 to get 0.5%
 TENTH_PERCENT_DIV =   1000      ; Divide by 1000 to get 0.1%
-TENTHOUSANDTH =  10000
+TENTHOUSANDTH =      10000
 
-LOCK_EXTRA =   5000000          ; Extra fee added to Transfer for Transfer And Lock
-CLAMP_MIN =    5000000          ; Minimum/maximum fees for Release From Endowment and Transfer/Transfer And Lock
-CLAMP_MAX =  500000000
+LOCK_EXTRA =        500000      ; Extra fee added to Transfer for Transfer And Lock
+CLAMP_MIN =         500000      ; Minimum/maximum fees for Release From Endowment and Transfer/Transfer And Lock
+CLAMP_MAX =       50000000
+TOO_BIG =     500000000000      ; The default transaction fee - all fees should be stated explicitly
 
-; Most transactions have a default fee of 0.05 ndau:
+; Most transactions have a default fee of 0.005 ndau. 
 
 handler EVENT_DEFAULT {
-    push FIVE_PERCENT           ; Free transactions invite spam: don't risk letting anything be free
+    push TOO_BIG                ; 5,000-ndau default so it's easily noticed - specify all fees explicitly
+}
+
+handler EVENT_CHANGERECOURSEPERIOD, EVENT_DELEGATE, EVENT_LOCK, EVENT_NOTIFY, EVENT_CREDITEAI, EVENT_CLAIMNODEREWARD, EVENT_NOMINATENODEREWARD, EVENT_COMMANDVALIDATORCHANGE, EVENT_RECORDPRICE, EVENT_SETSYSVAR, EVENT_SETREWARDSDESTINATION, EVENT_UNSTAKE, EVENT_ISSUE {
+    push FIVE_THOUSANDTHS       ; "Standard" fee is 0.005 ndau
 }
 
 handler EVENT_STAKE, EVENT_REGISTERNODE, EVENT_UNREGISTERNODE {
@@ -30,63 +35,63 @@ handler EVENT_SETVALIDATION, EVENT_CHANGEVALIDATION, EVENT_CREATECHILDACCOUNT {
 }
 
 handler EVENT_RELEASEFROMENDOWMENT {
-    push TENTH_PERCENT_DIV       ; Fee is 0.1%, 0.05 ndau minimum, 5 ndau maximum
+    push TENTH_PERCENT_DIV      ; Fee is 0.1%, 0.005 ndau minimum, 0.5 ndau maximum
     call clamped_qtydiv
 }
 
 handler EVENT_TRANSFER {
-    push HALF_PERCENT_DIV       ; Fee is 0.5%, 0.05 ndau minimum, 5 ndau maximum
+    push HALF_PERCENT_DIV       ; Fee is 0.5%, 0.005 ndau minimum, 0.5 ndau maximum
     call clamped_qtydiv
 }
 
 handler EVENT_TRANSFERANDLOCK {
     push HALF_PERCENT_DIV       ; Same as transfer (0.5%, 0.05 ndau minimum, 5 ndau maximum)
     call clamped_qtydiv
-    push FIVE_PERCENT           ; Plus 0.05 ndau
+    push FIVE_THOUSANDTHS       ; Plus 0.005 ndau
     add
 }
 
 ; size-based calculation
-; 0.05 ndau + 0.0001 ndau/byte
+; 0.005 ndau + 0.0001 ndau/byte
 ; expects to be called immediately, so the initial stack is size tx
 
 func size(2) {
-                                    ; size tx
-    swap                            ; tx size
-    push TENTHOUSANDTH              ; tx size TENTHOUSANDTH
-    mul                             ; tx (size * TENTHOUSANDTH)
-    push FIVE_PERCENT               ; tx product 0.005
-    add                             ; tx fee
+                                ; size tx
+    swap                        ; tx size
+    push TENTHOUSANDTH          ; tx size TENTHOUSANDTH
+    mul                         ; tx (size * TENTHOUSANDTH)
+    push FIVE_THOUSANDTHS       ; tx product 0.005
+    add                         ; tx fee
 }
 
 ; clamped value of tx_qty divided by div
 ; expects size tx divisor
 ; gets the tx qty, divides by the divisor, multiplies, clamps
 func clamped_qtydiv(3) {
-                                    ; size tx div
-    swap                            ; size div tx
-    field TX_QUANTITY               ; size div qty
-    swap                            ;size qty div
+                                ; size tx div
+    swap                        ; size div tx
+    field TX_QUANTITY           ; size div qty
+    swap                        ; size qty div
     div
     call clamp
 }
 
 ; clamp the argument between CLAMP_MIN and CLAMP_MAX
 func clamp(1) {
-                                    ; value
-    dup                             ; value value
-    push CLAMP_MIN                  ; value value CLAMP_MIN
-    lt                              ; value (value < CLAMP_MIN)
+                                ; value
+    dup                         ; value value
+    push CLAMP_MIN              ; value value CLAMP_MIN
+    lt                          ; value (value < CLAMP_MIN)
     ifnz
-        push CLAMP_MIN              ; (return minimum fee)
+        push CLAMP_MIN          ; (return minimum fee)
         ret
     endif
-                                    ; value
-    dup                             ; value value
-    push CLAMP_MAX                  ; value value CLAMP_MAX
-    gt                              ; value (value > CLAMP_MAX)
+                                ; value
+    dup                         ; value value
+    push CLAMP_MAX              ; value value CLAMP_MAX
+    gt                          ; value (value > CLAMP_MAX)
     ifnz
-        push CLAMP_MAX              ; (return maximum fee)
+        push CLAMP_MAX          ; (return maximum fee)
         ret
     endif
 }
