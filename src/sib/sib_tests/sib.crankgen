@@ -1,0 +1,23 @@
+VAR sib = 0.05, 0.1, 0.25, 0.5
+VAR denominator = 1000000000000
+LAMBDA expect = int(sib*denominator)
+VAR floor = 0, 10, 20, 30
+VAR target =  200, 5000
+LAMBDA t95 = target * 95 // 100
+LAMBDA marketf = t95-(sib*2*(t95-floor))
+LAMBDA market = int(marketf)
+
+BEGIN_TEMPLATE
+; testing this file
+load ../sib.chbin
+
+; set up preconditions
+clear
+push $floor     ; floor
+push $market    ; market ($marketf)
+push $target    ; target
+event 0
+
+run
+
+expect $expect
