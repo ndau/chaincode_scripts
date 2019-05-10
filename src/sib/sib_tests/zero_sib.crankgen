@@ -1,0 +1,19 @@
+VAR expect = 0
+VAR floor = 0, 5, 10, 15, 20, 25
+VAR target = 100, 500
+LAMBDA market = target*95//100
+
+BEGIN_TEMPLATE
+; testing this file
+load ../sib.chbin
+
+; set up preconditions
+clear
+push $floor
+push $market
+push $target
+event 0
+
+run
+
+expect $expect
