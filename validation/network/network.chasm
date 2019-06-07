@@ -4,6 +4,7 @@
 
 ;   ChangeValidation: 2 ndau Network signatures and 1 pre-BPC signature
 ;   NominateNodeRewards: 1 ndau Network signature
+;   SetSysvar: 2 ndau Network signatures
 ;   CommandValidatorChange: 2 ndau Network signatures and 1 pre-BPC signature
 
 NETWORK_MASK = 0b000_111
@@ -17,6 +18,12 @@ handler EVENT_NOMINATENODEREWARD {
                                     ; ... sigs
     push NETWORK_MASK               ; sigs mask
     push 1                          ; num reqd
+    call CheckMask
+}
+
+handler EVENT_SETSYSVAR {
+    push NETWORK_MASK
+    push 2
     call CheckMask
 }
 

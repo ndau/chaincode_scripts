@@ -7,7 +7,6 @@
 NDAU =           100000000
 FIVE_THOUSANDTHS =  500000
 ONE_PERCENT =      1000000
-HALF_PERCENT_DIV =     200      ; Divide by 200 to get 0.5%
 TENTH_PERCENT_DIV =   1000      ; Divide by 1000 to get 0.1%
 TENTHOUSANDTH =      10000
 
@@ -40,12 +39,12 @@ handler EVENT_RELEASEFROMENDOWMENT {
 }
 
 handler EVENT_TRANSFER {
-    push HALF_PERCENT_DIV       ; Fee is 0.5%, 0.005 ndau minimum, 0.5 ndau maximum
+    push TENTH_PERCENT_DIV       ; Fee is 0.1%, 0.005 ndau minimum, 0.5 ndau maximum
     call clamped_qtydiv
 }
 
 handler EVENT_TRANSFERANDLOCK {
-    push HALF_PERCENT_DIV       ; Same as transfer (0.5%, 0.05 ndau minimum, 5 ndau maximum)
+    push TENTH_PERCENT_DIV       ; Same as transfer (0.1%, 0.005 ndau minimum, 5 ndau maximum)
     call clamped_qtydiv
     push FIVE_THOUSANDTHS       ; Plus 0.005 ndau
     add

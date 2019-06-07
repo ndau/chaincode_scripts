@@ -3,39 +3,47 @@
 
 ; specs are as follows:
 ; Permitted Transactions: ChangeValidation, ReleaseFromEndowment, Transfer, TransferAndLock, Issue
-; Validation Keys: 4 Axiom Keys plus 3 pre-BPC Keys
+; Validation Keys: 3 Axiom Keys plus 9 BPC Keys
 ; Validation Rules:
-;   ChangeValidation: 1 of first 2 Axiom signatures and 1 of second 2 Axiom signatures and 1 of 3 pre-BPC signatures, or 2 pre-BPC signatures
+;   ChangeValidation: 2 Axiom signatures and 3 BPC signatures, or 6 BPC signatures
+
 ;   ReleaseFromEndowment:
-;   - Up to 5,000 ndau: 1 of first 2 Axiom signatures
-;   - >5,000 - 20,000 ndau: 1 of first 2 Axiom signatures and 1 of second 2 Axiom signatures
-;   - More than 20,000 ndau: any 3 of the 4 Axiomn signatures
+;   - Up to 30,000 ndau: 1 Axiom signature
+;   - More than 30,000 ndau: 2 Axiom signatures
+
 ;   Transfer and TransferAndLock, and Issue:
-;   - Up to 20,000 ndau: 1 of first 2 Axiom signatures
-;   - More than 20,000 ndau: 1 of first 2 Axiom signatures and 1 of second 2 Axiom signatures
+;   - Up to 30,000 ndau: 1 Axiom signature
+;   - More than 30,000 ndau: 2 Axiom signatures
 
 ; validation key ordering:
 ; 0 - Axiom Group A, Sig a
 ; 1 - Axiom Group A, Sig b
 ; 2 - Axiom Group B, Sig a
-; 3 - Axiom Group B, Sig b
-; 4 - pre-bpc A
-; 5 - pre-bpc B
-; 6 - pre-bpc C
+; 3 - BPC A
+; 4 - BPC B
+; 5 - BPC C
+; 6 - BPC D 
+; 7 - BPC E 
+; 8 - BPC F 
+; 9 - BPC G 
+; 10 - BPC H
+; 11 - BPC I
 
 ; bitmasks for signature groups
-AXIOM_GROUPA_MASK = 0x03
-AXIOM_GROUPB_MASK = 0x0C
-AXIOM_MASK = 0x0F
-BPC_MASK = 0x70
+AXIOM_MASK = 0x07
+BPC_MASK = 0xFF8
 
 ; we don't want any event we haven't specifically handled
 handler EVENT_DEFAULT {
     fail
 }
 
+handler EVENT_ISSUE {
+    zero            ; only one signature needed
+}
+
 ; For ChangeValidation, the rule is:
-; (count(GroupA) >= 1 AND count(GroupB) >= 1) OR (count(BPC) >= 2)
+; (count(Axiom) >= 2 OR (count(BPC) >= 6)
 ; We start with the bpc because that lets us early-exit on the AND clause.
 ; We do an explicit count and gte, even for the 1s cases, because we expect that we may want to
 ; change the number of signatures someday.
@@ -46,10 +54,9 @@ handler EVENT_DEFAULT {
 ;    bitmask of which authorized keys were found in the signature list
 handler EVENT_CHANGEVALIDATION {
                                     ; number of sigs required
-    GROUPA_MIN = 1
-    GROUPB_MIN = 1
-    BPC_WITH_AXIOM_MIN = 1          ; 1 of GROUPA + 1 of GROUPB + 1 of BPC_WITH_AXIOM
-    BPC_ALONE_MIN = 2               ; OR 2 of BPC_ALONE_MIN
+    AXIOM_MIN = 2
+    BPC_WITH_AXIOM_MIN = 3          ; 2 of AXIOM + 3 of BPC_WITH_AXIOM
+    BPC_ALONE_MIN = 6               ; OR 6 of BPC_ALONE_MIN
 
                                     ; stack top on right -- sig bitmask on top, then tx, then account
                                     ;acct tx sigs
@@ -62,7 +69,7 @@ handler EVENT_CHANGEVALIDATION {
     call EnoughSigs                 ;sigs bpcmask bpcalonemin enuf
     ifnz                            ;sigs bpcmask bpcalonemin
         zero                        ;sigs bpcmask bpcalonemin zero
-        ret                         ; zero is success -- >=2 bpc sigs, so it's valid
+        ret                         ; zero is success -- >=6 bpc sigs, so it's valid
     endif                           ;not enough bpc alone, so look for Axiom sigs
 
                                     ;sigs bpcmask bpcalonemin
@@ -75,25 +82,20 @@ handler EVENT_CHANGEVALIDATION {
     endif
                                     ;sigs bpcmask bpcwithamin
     drop2                           ;sigs
-    push AXIOM_GROUPA_MASK          ;sigs grpamask
-    push GROUPA_MIN                 ;sigs grpamask grpamin
-    call EnoughSigs                 ;sigs grpamask grpamin enuf
-    ifz                             ;sigs grpamask grpamin
-        fail                        ; not enough grpa sigs
+    push AXIOM_MASK                 ;sigs grpamask
+    push AXIOM_MIN                  ;sigs grpamask axiommin
+    call EnoughSigs                 ;sigs grpamask axiommin enuf
+    ifz                             ;sigs grpamask axiommin
+        fail                        ; not enough axiom sigs
     endif
-                                    ;sigs grpamask grpamin
-    drop2                           ;sigs
-    push AXIOM_GROUPB_MASK          ;sigs grpbmask
-    push GROUPB_MIN                 ;sigs grpbmask grpbmin
-    call EnoughSigs                 ;sigs grpbmask grpbmin enuf
-    not                             ; a successful return is 0
+
+    zero                            ; a successful return is 0
 }
 
+; For ReleaseFromEndowment (RFE), Transfer, or Transfer and Lock, the rule is:
+; * we always need 1 of Axiom
+; * amt > 30000, need 2 of Axiom
 
-; For ReleaseFromEndowment (RFE), the rule is:
-; * we always need 1 of groupA
-; * amt > 5000, also need 1 of groupB
-; * amt > 20000, also need 1 more of either groupA or groupB
 ; We do an explicit count and gte, even for the 1s cases, because we expect that we may want to
 ; change the number of signatures someday.
 ;
@@ -101,126 +103,41 @@ handler EVENT_CHANGEVALIDATION {
 ;    account
 ;    transaction
 ;    bitmask of which authorized keys were found in the signature list
-handler EVENT_RELEASEFROMENDOWMENT {
-                                    ; number of sigs required
-    GROUPA_MIN = 1
-    GROUPB_MIN = 1
-    COMBINED_MIN = 3
 
+handler EVENT_RELEASEFROMENDOWMENT, EVENT_TRANSFER, EVENT_TRANSFERANDLOCK {
+                                    ; number of sigs required
+    BELOW_MIN = 1
+    ABOVE_MIN = 2
                                     ; breakpoints for decisions
-    LOW_LIMIT = nd5000
-    HIGH_LIMIT = nd20000
+    AMT_LIMIT = nd30000
                                     ; stack top on right -- sig bitmask on top, then tx, then account
                                     ; get rid of acct since we don't need to look at it
                                     ;acct tx sigs
     roll 2                          ;tx sigs acct
     drop                            ;tx sigs
 
-                                    ; check that we have at least GROUPA_MIN of groupA
-                                    ;tx sigs
-    push AXIOM_GROUPA_MASK          ;tx sigs grpamask
-    push GROUPA_MIN                 ;tx sigs grpamask grpamin
-    call EnoughSigs                 ;tx sigs grpamask grpamin enuf
-    ifz                             ;tx sigs grpamask grpamin
-        fail                        ; not enough grpa sigs
-    endif
-    drop2                           ;tx sigs
-
                                     ; if amt <= LOW_LIMIT, we're done
                                     ;tx sigs
     pick 1                          ;tx sigs tx
     field TX_QUANTITY               ;tx sigs amt
-    push LOW_LIMIT                  ;tx sigs amt LOW_LIMIT
+    push AMT_LIMIT                  ;tx sigs amt LOW_LIMIT
     lte                             ;tx sigs (amt <= LOW_LIMIT)
     ifnz
         zero                        ; we're under the limit, so succeed
         ret
     endif
 
-                                    ; check that we have at least GROUPB_MIN of groupA
+                                    ; check that we have at least ABOVE_MIN of Axiom
                                     ;tx sigs
-    push AXIOM_GROUPB_MASK          ;tx sigs grpbmask
-    push GROUPB_MIN                 ;tx sigs grpbmask grpbmin
-    call EnoughSigs                 ;tx sigs grpbmask grpbmin enuf
-    ifz                             ;tx sigs grpbmask grpbmin
-        fail                        ; not enough grpb sigs
-    endif
-    drop2                           ;tx sigs
-
-                                    ; if amt <= HIGH_LIMIT, we're done
-                                    ;tx sigs
-    swap                            ;sigs tx
-    field TX_QUANTITY               ;sigs amt
-    push HIGH_LIMIT                 ;sigs amt HIGH_LIMIT
-    lte                             ;sigs (amt <= HIGH_LIMIT)
-    ifnz
-        zero                        ; we're under the limit, so we're done
-        ret
+    push AXIOM_MASK                 ;tx sigs axiommask
+    push ABOVE_MIN                  ;tx sigs axiommask grpbmin
+    call EnoughSigs                 ;tx sigs axiommask grpbmin enuf
+    ifz                             ;tx sigs axiommask grpbmin
+        fail                        ; not enough axiom sigs
     endif
 
-                                    ; it's a big amount, look for three sigs
-                                    ;sigs
-    push AXIOM_MASK                 ;sigs axiommask
-    push COMBINED_MIN               ;sigs axiommask combinedmin
-    call EnoughSigs                 ;sigs axiommask combinedmin enuf
-    not                             ; if true, then valid, if false, invalid
+    zero                            ; succeed
 }
-
-;   Transfer and TransferAndLock:
-;   - Up to 20,000 ndau: 1 of first 2 Axiom signatures
-;   - More than 20,000 ndau: 1 of first 2 Axiom signatures and 1 of second 2 Axiom signatures
-
-
-; For EventTransfer, the rule is:
-; * we always need 1 of groupA
-; * amt > 20000, also need 1 of groupB
-;
-; Expected arguments on the stack in order from bottom to top are:
-;    account
-;    transaction
-;    bitmask of which authorized keys were found in the signature list
-handler EVENT_TRANSFER, EVENT_TRANSFERANDLOCK, EVENT_ISSUE {
-                                    ; number of sigs required
-    GROUPA_MIN = 1
-    GROUPB_MIN = 1
-
-                                    ; breakpoints for decisions
-    HIGH_LIMIT = nd20000
-                                    ; stack top on right -- sig bitmask on top, then tx, then account
-                                    ; get rid of acct since we don't need to look at it
-                                    ;acct tx sigs
-    roll 2                          ;tx sigs acct
-    drop                            ;tx sigs
-
-                                    ; check that we have at least GROUPA_MIN of groupA
-                                    ;tx sigs
-    push AXIOM_GROUPA_MASK           ;tx sigs grpamask
-    push GROUPA_MIN                 ;tx sigs grpamask grpamin
-    call EnoughSigs                 ;tx sigs grpamask grpamin enuf
-    ifz                             ;tx sigs grpamask grpamin
-        fail                        ; not enough grpa sigs
-    endif
-    drop2                           ;tx sigs
-
-                                    ; if amt <= HIGH_LIMIT, we're done
-                                    ;tx sigs
-    swap                            ;sigs tx
-    field TX_QUANTITY               ;sigs amt
-    push HIGH_LIMIT                 ;sigs amt HIGH_LIMIT
-    lte                             ;sigs (amt <= HIGH_LIMIT)
-    ifnz
-        zero                        ; we're under the limit, so we're done
-        ret
-    endif
-
-                                    ; it's a big amount, look for a sig from grpb
-                                    ;sigs
-    push AXIOM_GROUPB_MASK           ;sigs grpbmask
-    push GROUPB_MIN                 ;sigs grpbmask grpbmin
-    call EnoughSigs                 ;sigs grpbmask grpbmin enuf
-    not                             ; if EnoughSigs was true, then succeed
-}
-
 
 ; EnoughSigs expects to find a bitmask of signature indices found,
 ; a mask with the bits of which ones to consider, and a minimum number that must be set

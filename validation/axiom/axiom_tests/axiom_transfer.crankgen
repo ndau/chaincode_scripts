@@ -6,45 +6,29 @@ load ../axiom.chbin
 ; - Permitted Transactions: Transfer, Transfer and Lock
 ; - Validation Keys: two sets of two Axiom keys (Axiom A, Axiom B)
 ; - Validation Rules:
-;     - <= 20,000 ndau - 1 primary Axiom signature
-;     - > 20,000 ndau - 1 primary Axiom signature and 1 secondary Axiom signature
+;     - <= 30,000 ndau - 1 Axiom signature
+;     - > 30,000 ndau - 2 Axiom signatures
 
-; less than 20,000 ndau, 1 primary Axiom
+; less than 30,000 ndau, 1 primary Axiom
 clear
 push 0
 push { TX_QUANTITY: nd100 }
-push 0b_00_01
+push 0b_100
 event $event
 run succeed
 
-; less than 20,000 ndau, 1 secondary Axiom (should fail)
+; more than 30,000 ndau, 1 Axiom (should fail)
 clear
 push 0
-push { TX_QUANTITY: nd100 }
-push 0b_01_00
+push { TX_QUANTITY: nd30001 }
+push 0b_010
 event $event
 run fail
 
-; more than 20,000 ndau, 1 secondary Axiom (should fail)
+; more than 30,000 ndau, 2 Axiom (should succeed)
 clear
 push 0
-push { TX_QUANTITY: nd20001 }
-push 0b_01_00
-event $event
-run fail
-
-; more than 20,000 ndau, 1 primary Axiom (should fail)
-clear
-push 0
-push { TX_QUANTITY: nd20001 }
-push 0b_00_01
-event $event
-run fail
-
-; more than 20,000 ndau, 1 primary Axiom and 1 secondary Axiom
-clear
-push 0
-push { TX_QUANTITY: nd20001 }
-push 0b_01_01
+push { TX_QUANTITY: nd30001 }
+push 0b_101
 event $event
 run succeed
