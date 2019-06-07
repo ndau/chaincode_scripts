@@ -1,0 +1,16 @@
+; Post-setup recoverable account
+;
+; After the recovery service is set up, the ndau wallet app's public key is
+; added to the account. If the recovery service is needed in the future, it will
+; be because the ndau wallet app key is lost. We again don't want to require a
+; 2-of-2 requirement for the recovery service, so our validation rules are still
+; that only one signature is required for any transaction.
+;
+; Expected arguments on the stack in order from bottom to top are:
+;    account
+;    transaction
+;    bitmask of which authorized keys were found in the signature list
+
+handler EVENT_DEFAULT {
+    zero
+}

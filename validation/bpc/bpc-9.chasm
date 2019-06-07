@@ -1,0 +1,30 @@
+; BPC operations validation script
+;
+; - Permitted Transactions: ChangeValidation, SetSysvar
+; - Validation Keys:  9 BPC Keys
+; - Validation Rules:
+;     - ChangeValidation: 6 signatures
+;     - SetSysvars: 6 signatures
+
+handler EVENT_DEFAULT {
+    fail                            ; allow nothing we haven't explicitly permitted
+}
+
+handler EVENT_SETSYSVAR {
+    call EnoughSigs
+    not                             ; 0 is a good return
+}
+
+handler EVENT_CHANGEVALIDATION {
+    call EnoughSigs
+    not                             ; 0 is a good return
+}
+
+; EnoughSigs returns true if there are enough sigs
+func EnoughSigs(1) {
+    MIN_SIGS = 6
+                                    ; only item on stack will be the sigs bitmask
+    count1s                         ; nsigs
+    push MIN_SIGS                   ; nsigs minsigs
+    gte                             ; (nsigs >= minsigs)
+}

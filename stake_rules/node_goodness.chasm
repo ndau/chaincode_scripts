@@ -1,0 +1,4 @@
+handler EVENT_DEFAULT {
+    drop
+    field ACCT_BALANCE
+}

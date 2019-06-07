@@ -1,6 +1,6 @@
 VAR event = EVENT_SETVALIDATION, EVENT_CHANGEVALIDATION, EVENT_CREATECHILDACCOUNT
 VAR size = 1, 2, 4, 64, 256, 8192
-VAR base_fee_ndau = 0.05
+VAR base_fee_ndau = 0.005
 VAR fee_per_byte_ndau = 0.0001
 VAR ndau_to_napu = 100000000
 
