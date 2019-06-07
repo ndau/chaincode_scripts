@@ -9,6 +9,7 @@
 ;
 ;   TARGET PRICE (top)
 ;   MARKET PRICE
+;    FLOOR PRICE
 ;
 ; These prices must be integers expressed with sufficient precision to accurately
 ; determine proportionality. Expressing them as cents is sufficient precision
@@ -24,69 +25,75 @@
 ; The function implemented in this script has the following properties:
 ; - if market price is greater than or equal to ACTIVATE_THRESHOLD% of target
 ;   price, RATE is 0
-; - if market price is less than or equal to CAP_THRESHOLD% of target price,
-;   RATE is CAP% (scaled to the constant)
-; - at any other point, RATE lies on the straight line defined by
-;   ACTIVATE_THRESHOLD, CAP_THRESHOLD, and CAP.
+; - calculate RATE on the flat plane defined by the equation
+;
+;                       (TARGET PRICE * ACTIVATE_THRESHOLD) - MARKET_PRICE
+;        RATE =  CAP * ----------------------------------------------------
+;                       (TARGET PRICE * ACTIVATE_THRESHOLD) - FLOOR_PRICE
+;
+; - if RATE > 50%, cap RATE at 50%
 
 ACTIVATE_THRESHOLD = 950000000000   ; rate
-CAP_THRESHOLD = 500000000000        ; rate
 CAP = 500000000000                  ; rate
 
 ; don't change this
 RATE_DENOMINATOR = 1000000000000    ; 10^12
 
 handler EVENT_DEFAULT {
-                                    ; market target
-    push RATE_DENOMINATOR           ; market target RATE_DENOMINATOR
-    tuck 2                          ; RATE_DENOMINATOR market target
-    muldiv                          ; price_frac
-
-    ;; return zero if gte ACTIVATE_THRESHOLD
-
-    dup                             ; price_frac price_frac
-    push ACTIVATE_THRESHOLD         ; price_frac price_frac ACTIVATE_THRESHOLD
-    gte                             ; price_frac (price_frac >= ACTIVATE_THRESHOLD)
-    ifnz                            ;; if true
+                                    ; floor market target
+    push ACTIVATE_THRESHOLD         ; floor market target ACTIVATE_THRESHOLD
+    push RATE_DENOMINATOR           ; floor market target ACTIVATE_THRESHOLD RATE_DENOMINATOR
+    muldiv                          ; floor market target_95 (95% of target price)
+    dup                             ; floor market target_95 target_95
+    pick 2                          ; floor market target_95 target_95 market
+    lt                              ;floor market target_95 (target_95 < market)
+    ifnz
+                                    ; if market >= target_95 (equiv: target_95 < market)
         zero
         ret
-    endif                           ; price_frac
+    endif
+                                    ; floor market target_95
+    dup                             ; floor market target_95 target_95
+    tuck 2                          ; floor target_95 market target_95
 
-    ;; return CAP if lte CAP_THRESHOLD
+    ;; note: we are intentionally going to deviate from the rate formula, using
+    ;; an equivalent formula, in order to simplify the chaincode.
+    ;;
+    ;; the rate formula calls for (target_95-market)/(target_95-floor)
+    ;; we will instead implement (market-target-95)/(floor-target_95)
+    ;;
+    ;; reversing the order of the subtractions negates them.
+    ;; negating both the top and bottom of a division is a nop
+    ;; therefore we have not changed the result at all.
 
-    dup                             ; price_frac price_frac
-    push CAP_THRESHOLD              ; price_frac price_frac CAP_THRESHOLD
-    lte                             ; price_frac (price_frac <= CAP_THRESHOLD)
-    ifnz                            ;; if true
-        push CAP
+    sub                             ;floor target_95 (market-target_95)
+    tuck 2                          ;(market-target_95) floor target_95
+    sub                             ;(market-target_95) (floor-target_95)
+
+    ;; push the rate denominator and muldiv, instead of dividing naively,
+    ;; to ensure that if the user input small numbers, they don't encounter
+    ;; too much precision loss
+    push RATE_DENOMINATOR           ;(market-target_95) (floor-target_95) RATE_DENOMINATOR
+    swap                            ;(market-target_95) RATE_DENOMINATOR (floor-target_95)
+    muldiv                          ; (RATE_DENOMINATOR * ((market-target_95)/(floor-target_95)))
+
+    ;; there's only one qty on the stack now; we're just going to call it frac
+    ;; in the debug notes, for conciseness
+                                    ;frac
+    push CAP                        ;frac CAP
+    push RATE_DENOMINATOR           ;frac CAP RATE_DENOMINATOR
+    muldiv                          ;rate
+
+    ;; rate is expressed as an integer with implicit division by rate denominator
+
+    dup                             ; rate rate
+    push CAP                        ; rate rate CAP
+    gt                              ; rate (rate > CAP)
+    ifnz
+                                    ; rate
+        push CAP                    ; rate CAP
         ret
-    endif                           ; price_frac
-
-    ;; figure out the linear interpolation
-    ;;
-    ;; y = y0 + (x - x0)*(y1-y0)/(x1-x0)
-    ;;
-    ;; x = price_frac
-    ;; x0 = CAP_THRESHOLD
-    ;; y0 = CAP
-    ;; x1 = ACTIVATE_THRESHOLD
-    ;; y1 = 0
-    ;;
-    ;; y = CAP + (price_frac - CAP_THRESHOLD)*(0-CAP)/(ACTIVATE_THRESHOLD-CAP_THRESHOLD)
-
-    push CAP                        ; price_frac CAP
-    swap                            ; CAP price_frac
-
-    push CAP_THRESHOLD              ; CAP price_frac CAP_THRESHOLD
-    sub                             ; CAP (price_frac-CAP_THRESHOLD)
-
-    push CAP                        ; CAP (price_frac-CAP_THRESHOLD) CAP
-    neg                             ; CAP (price_frac-CAP_THRESHOLD) (-CAP)
-
-    push ACTIVATE_THRESHOLD         ; CAP (price_frac-CAP_THRESHOLD) (-CAP) ACTIVATE_THRESHOLD
-    push CAP_THRESHOLD              ; CAP (price_frac-CAP_THRESHOLD) (-CAP) ACTIVATE_THRESHOLD CAP_THRESHOLD
-    sub                             ; CAP (price_frac-CAP_THRESHOLD) (-CAP) (ACTIVATE_THRESHOLD-CAP_THRESHOLD)
-
-    muldiv                          ; CAP ((price_frac - CAP_THRESHOLD)*(0-CAP)/(ACTIVATE_THRESHOLD-CAP_THRESHOLD))
-    add
+    endif
+                                    ; rate
+    ;; just fall off the end here; we have the rate we want
 }
