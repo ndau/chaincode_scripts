@@ -1,3 +1,10 @@
+; Node Goodness (active node ranking)
+;
+; This function will become more complex in the future. At the moment it is simply the total amount the node
+; account has staked to the Register Node staking rules account (including all co-stake)
+;
+; NEEDS TO BE CORRECTED TO MATCH THAT DESCRIPTION
+
 handler EVENT_DEFAULT {
     drop
     field ACCT_BALANCE
