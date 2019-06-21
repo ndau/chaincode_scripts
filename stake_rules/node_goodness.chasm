@@ -25,8 +25,8 @@
 ;     return 0
 ;   return weight * (1-(penalties / penalty_denominator))
 
-VOTED = 1001
-BYZANTINE = 1002
+VOTED = 121
+BYZANTINE = 122
 
 ; history size is defined at https://github.com/oneiro-ndev/metanode/blob/180b6970aaf3df5cdd2ba05607e5ca36e08f5d56/pkg/meta/state/vote_stats.go#L14
 HISTORY_SIZE = 20
@@ -77,7 +77,7 @@ handler EVENT_DEFAULT {
 }
 
 ; called via deco; therefore needs no args: it always gets a list entry
-def non_vote_penalty(0) {
+func non_vote_penalty(0) {
                                     ; node_round_stats
     field VOTED                     ; stats_voted
     ifz                             ; zero == false == didn't vote
@@ -88,7 +88,7 @@ def non_vote_penalty(0) {
 }
 
 ; called via deco; therefore needs no args: it always gets a list entry
-def byzantine_penalty(0) {
+func byzantine_penalty(0) {
                                     ; node_round_stats
     field BYZANTINE                 ; stats_againstconsensus
     ifnz                            ; == true == voted against consensus
