@@ -1,0 +1,28 @@
+VAR total_stake = 1000,5000,12345,100000
+VAR total_delegated_ndau = 1000,5000,54321,100000
+VAR missed_votes = 0,1,5,20
+VAR byz_votes = 0,1,5,8,20
+LAMBDA vote_stats = [{1001:i<missed_votes,1002:i<byz_votes} for i in range(20)]
+
+VAR stakemul = 1
+LAMBDA weight = (stakemul * total_stake) + total_delegated_ndau
+LAMBDA penalties = sum(2 for v in vote_stats if not v[1001]) + sum(5 for v in vote_stats if v[1002])
+VAR pd = 40
+LAMBDA expect = 0 if penalties > pd else weight * (1-(penalties / pd))
+
+BEGIN_TEMPLATE
+; testing this file
+load ../node_goodness.chbin
+
+; set up preconditions
+clear
+push $vote_stats             ; vote history
+push $total_delegated_ndau   ; total delegation
+push "ndaddress"             ; address
+push {}                      ; account data
+push $total_stake            ; total stake
+event 0
+
+run
+
+expect $expect
