@@ -8,7 +8,7 @@ VAR stakemul = 1
 LAMBDA weight = (stakemul * total_stake) + total_delegated_ndau
 LAMBDA penalties = sum(2 for v in vote_stats if not v[121]) + sum(5 for v in vote_stats if v[122])
 VAR pd = 40
-LAMBDA expect = 0 if penalties > pd else int(weight * (1-(penalties / pd)))
+LAMBDA expect = 0 if penalties > pd else int(weight - ((penalties * weight) / pd))
 
 BEGIN_TEMPLATE
 ; testing this file

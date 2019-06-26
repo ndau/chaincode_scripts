@@ -27,6 +27,11 @@
 
 VOTED = 121
 BYZANTINE = 122
+VOTEDF = 123
+BYZANTINEF = 124
+
+; multiply stake weight by this value to increase its importance relative to delegation power
+STAKE_WEIGHT = 1
 
 ; history size is defined at https://github.com/oneiro-ndev/metanode/blob/180b6970aaf3df5cdd2ba05607e5ca36e08f5d56/pkg/meta/state/vote_stats.go#L14
 HISTORY_SIZE = 20
@@ -36,7 +41,10 @@ RATE_DENOMINATOR = 1000000000000    ; 10^12
 
 handler EVENT_DEFAULT {
                                     ; vote_history total_delegation address account_data total_stake
-    roll 3                          ; vote_history address account_data total_stake total_delegation
+    push STAKE_WEIGHT               ; vote_history total_delegation address account_data total_stake stake_weight
+    mul                             ; vote_history total_delegation address account_data weighted_stake
+
+    roll 3                          ; vote_history address account_data weighted_stake total_delegation
     add                             ; vote_history address account_data weight
     roll 3                          ; address account_data weight vote_history
 
@@ -44,20 +52,22 @@ handler EVENT_DEFAULT {
     ;; at the bottom of the stack, but for expediency and conciseness we will
     ;; no longer write them out
 
-    deco non_vote_penalty VOTED     ; weight vote_history
-    deco byzantine_penalty BYZANTINE; weight vote_history
+    deco non_vote_penalty VOTEDF    ; weight vote_history
+    deco byzantine_penalty BYZANTINEF; weight vote_history
 
     dup                             ; weight vote_history vote_history
-    fieldl VOTED                    ; weight vote_history vote_penalty_list
+    fieldl VOTEDF                   ; weight vote_history vote_penalty_list
     sum                             ; weight vote_history vote_penalty
 
     swap                            ; weight vote_penalty vote_history
-    fieldl BYZANTINE                ; weight vote_penalty byzantine_penalty_list
+    fieldl BYZANTINEF               ; weight vote_penalty byzantine_penalty_list
     sum                             ; weight vote_penalty byzantine_penalty
 
     add                             ; weight penalty
     dup                             ; weight penalty penalty
     push HISTORY_SIZE               ; weight penalty penalty history_size
+    push 2
+    mul
     gt                              ; weight penalty (penalty > history_size)
     ifnz                            ; if
         zero
@@ -66,6 +76,8 @@ handler EVENT_DEFAULT {
 
                                     ; weight penalty
     push HISTORY_SIZE               ; weight penalty history_size
+    push 2
+    mul
     push RATE_DENOMINATOR           ; weight penalty history_size rate_denominator
     swap                            ; weight penalty rate_denominator history_size
     muldiv                          ; weight penalty_pct
