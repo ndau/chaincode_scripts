@@ -1,0 +1,9 @@
+; stack top: list of costaker account data objects
+handler EVENT_DEFAULT {
+    deco zro 10
+}
+
+; called via deco, therefore needs no args: it always gets a list entry
+func zro(0) {
+    zero
+}
