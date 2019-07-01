@@ -1,6 +1,8 @@
+DISBURSEMENT_QTY_FIELD_ID = 10
+
 ; stack top: list of costaker account data objects
 handler EVENT_DEFAULT {
-    deco zro 10
+    deco zro DISBURSEMENT_QTY_FIELD_ID
 }
 
 ; called via deco, therefore needs no args: it always gets a list entry
