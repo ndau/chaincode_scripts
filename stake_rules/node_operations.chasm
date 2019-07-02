@@ -126,6 +126,36 @@ handler EVENT_UNSTAKE {
     zero
 }
 
+handler EVENT_REGISTERNODE {
+    ;; this function is only in here for future-proofing; it always returns true for now
+    zero
+}
+
+;; ResolveStake, but the event isn't predefined yet
+handler 26 {
+                                    ; primary rules stakeTo target tx aggregate from_primary from_target
+    pick 4                          ; primary rules stakeTo target tx aggregate from_primary from_target target
+    field ACCT_BALANCE              ; primary rules stakeTo target tx aggregate from_primary from_target target.balance
+    push RESOLVE_STAKE_BASE         ; primary rules stakeTo target tx aggregate from_primary from_target target.balance RESOLVE_STAKE_BASE
+    over                            ; primary rules stakeTo target tx aggregate from_primary from_target target.balance RESOLVE_STAKE_BASE target.balance
+    push RESOLVE_STAKE_V_N          ; primary rules stakeTo target tx aggregate from_primary from_target target.balance RESOLVE_STAKE_BASE target.balance RESOLVE_STAKE_V_N
+    push RESOLVE_STAKE_V_D          ; primary rules stakeTo target tx aggregate from_primary from_target target.balance RESOLVE_STAKE_BASE target.balance RESOLVE_STAKE_V_N RESOLVE_STAKE_V_D
+    muldiv                          ; primary rules stakeTo target tx aggregate from_primary from_target target.balance RESOLVE_STAKE_BASE (target.balance*RESOLVE_STAKE_V_N/RESOLVE_STAKE_V_D)
+    add                             ; primary rules stakeTo target tx aggregate from_primary from_target target.balance (RESOLVE_STAKE_BASE+(target.balance*RESOLVE_STAKE_V_N/RESOLVE_STAKE_V_D))
+
+    ;; we'll now abbreviate the qty (RESOLVE_STAKE_BASE+(target.balance*RESOLVE_STAKE_V_N/RESOLVE_STAKE_V_D))
+    ;; as price
+    ;; we'll also now elide the elements no longer needed
+
+                                    ; target.balance price
+    dup2                            ; target.balance price target.balance price
+    lt                              ; target.balance price (target.balance<price)
+    ifnz
+        swap                        ; price target.balance
+    endif
+    ;; the lesser of target.balance and price is on top of the stack at return time
+}
+
 func is_primary(1) {
                                     ; tx
     dup                             ; tx tx
