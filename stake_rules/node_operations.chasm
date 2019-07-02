@@ -1,0 +1,71 @@
+; Node Operations
+;
+; Govern staking, node registration, and the reverse of both of those operations.
+;
+; See https://paper.dropbox.com/doc/Node-Operations-Rules-Proposal--AgKAV7c_y9Wi4HIPGd6UVydGAQ-fQtSgwmn07FLQVFi4Jlmd
+; for pseudocode and rationale.
+
+; napu per ndau
+NDAU = 100_000_000
+
+MIN_SELF_STAKE = 1000_00_000_000    ; 1000 ndau
+MAX_LEVERAGE = 3
+MAX_AGGREGATE_STAKE = 50_000_00_000_000 ; 50,000 ndau
+
+NINETY_DAY = 7_776_000_000_000      ; 60 * 60 * 24 * 90 * 1_000_000
+
+RESOLVE_STAKE_BASE = 5_00_000_000   ; 5 ndau
+RESOLVE_STAKE_V_N = 5
+RESOLVE_STAKE_V_D = 100
+
+;; tx field accessors
+TARGET = 3
+STAKE_TO = 5
+RULES = 8
+
+
+func is_primary(1) {
+                                    ; tx
+    dup                             ; tx tx
+    field STAKE_TO                  ; tx stake_to
+    swap                            ; stake_to tx
+    field RULES                     ; stake_to rules
+    eq
+}
+
+func is_primary_self_stake(2) {
+                                    ; primary tx
+    field TARGET                    ; primary target
+    eq
+}
+
+func relations_hold(2) {
+    ;; from_primary >= MIN_SELF_STAKE
+                                    ; from_external from_primary
+    dup                             ; from_external from_primary from_primary
+    push MIN_SELF_STAKE             ; from_external from_primary from_primary MIN_SELF_STAKE
+    lt                              ; from_external from_primary (from_primary<MIN_SELF_STAKE)
+    ifnz
+        false
+        ret
+    endif
+
+    ;; from_primary * MAX_LEVERAGE >= from_external
+                                    ; from_external from_primary
+    dup                             ; from_external from_primary from_primary
+    push MAX_LEVERAGE               ; from_external from_primary from_primary MAX_LEVERAGE
+    mul                             ; from_external from_primary (from_primary*MAX_LEVERAGE)
+    pick 2                          ; from_external from_primary (from_primary*MAX_LEVERAGE) from_external
+    lt                              ; from_external from_primary ((from_primary*MAX_LEVERAGE)<from_external)
+    ifnz
+        false
+        ret
+    endif
+
+    ;; from_external + from_primary <= MAX_AGGREGATE_STAKE
+                                    ; from_external from_primary
+    add                             ; (from_external+from_primary)
+    push MAX_AGGREGATE_STAKE        ; (from_external+from_primary) MAX_AGGREGATE_STAKE
+    gt                              ; ((from_external+from_primary)>MAX_AGGREGATE_STAKE)
+    not                             ; ((from_external+from_primary)<=MAX_AGGREGATE_STAKE)
+}
