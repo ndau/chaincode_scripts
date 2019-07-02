@@ -8,13 +8,13 @@
 ; napu per ndau
 NDAU = 100000000
 
-MIN_SELF_STAKE = 100000000000    ; 1000 ndau
+MIN_SELF_STAKE = 100000000000       ; 1000 ndau
 MAX_LEVERAGE = 3
 MAX_AGGREGATE_STAKE = 5000000000000 ; 50,000 ndau
 
-NINETY_DAY = 7776000000000      ; 60 * 60 * 24 * 90 * 1_000_000
+NINETY_DAY = 7776000000000          ; 60 * 60 * 24 * 90 * 1_000_000
 
-RESOLVE_STAKE_BASE = 500000000   ; 5 ndau
+RESOLVE_STAKE_BASE = 500000000      ; 5 ndau
 RESOLVE_STAKE_V_N = 5
 RESOLVE_STAKE_V_D = 100
 
@@ -24,9 +24,9 @@ STAKE_TO = 5
 RULES = 8
 QTY = 11
 
-handler EVENT_DEFAULT {
-    fail
-}
+;; the absence of an EVENT_DEFAULT handler is equivalent to manually defining
+;; it to fail: in either case, calling in with an unspecified function causes
+;; a failure
 
 handler EVENT_STAKE {
                                     ; primary rules stakeTo target tx aggregate from_primary from_target
@@ -77,6 +77,53 @@ handler EVENT_STAKE {
     pick 2                          ; primary rules stakeTo target tx aggregate from_primary from_target from_external from_primary
     call relations_hold             ; primary rules stakeTo target tx aggregate from_primary from_target relations_hold
     not                             ; 0 indicates success as a return code
+}
+
+handler EVENT_UNSTAKE {
+                                    ; primary rules stakeTo target tx aggregate from_primary from_target
+    over                            ; primary rules stakeTo target tx aggregate from_primary from_target from_primary
+    zero                            ; primary rules stakeTo target tx aggregate from_primary from_target from_primary 0
+    eq                              ; primary rules stakeTo target tx aggregate from_primary from_target (from_primary == 0)
+    ifnz
+        zero                        ; 0 days hold
+        zero                        ; success
+        ret
+    endif
+
+                                    ; primary rules stakeTo target tx aggregate from_primary from_target
+    pick 3                          ; primary rules stakeTo target tx aggregate from_primary from_target tx
+    call is_primary                 ; primary rules stakeTo target tx aggregate from_primary from_target is_primary
+    ifnz
+        push NINETY_DAY             ; 90 days hold
+        zero                        ; success
+        ret
+    endif
+
+                                    ; primary rules stakeTo target tx aggregate from_primary from_target
+    pick 7                          ; primary rules stakeTo target tx aggregate from_primary from_target primary
+    pick 4                          ; primary rules stakeTo target tx aggregate from_primary from_target primary tx
+    call is_primary_self_stake      ; primary rules stakeTo target tx aggregate from_primary from_target is_pss
+    ifnz
+                                    ; primary rules stakeTo target tx aggregate from_primary from_target
+        push NINETY_DAY             ; ... tx aggregate from_primary from_target 90d
+        pick 2                      ; ... tx aggregate from_primary from_target 90d from_primary
+        pick 5                      ; ... tx aggregate from_primary from_target 90d from_primary tx
+        field QTY                   ; ... aggregate from_primary from_target 90d from_primary tx.qty
+        dup2                        ; ... aggregate from_primary from_target 90d from_primary tx.qty from_primary tx.qty
+        sub                         ; ... aggregate from_primary from_target 90d from_primary tx.qty (from_primary-tx.qty)
+        tuck 2                      ; ... aggregate from_primary from_target 90d (from_primary-tx.qty) from_primary tx.qty
+        add                         ; ... aggregate from_primary from_target 90d (from_primary-tx.qty) (from_primary+tx.qty)
+        pick 5                      ; ... 90d (from_primary-tx.qty) (from_primary+tx.qty) aggregate
+        swap                        ; ... 90d (from_primary-tx.qty) aggregate (from_primary+tx.qty)
+        sub                         ; ... 90d (from_primary-tx.qty) (aggregate-from_primary+tx.qty)
+        swap                        ; ... 90d (aggregate-from_primary+tx.qty) (from_primary-tx.qty)
+        call relations_hold         ; ... 90d relations_hold
+        not                         ; invert so 0 is success
+        ret
+    endif
+
+    push NINETY_DAY
+    zero
 }
 
 func is_primary(1) {
