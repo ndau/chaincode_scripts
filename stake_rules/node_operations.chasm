@@ -6,15 +6,15 @@
 ; for pseudocode and rationale.
 
 ; napu per ndau
-NDAU = 100_000_000
+NDAU = 100000000
 
-MIN_SELF_STAKE = 1000_00_000_000    ; 1000 ndau
+MIN_SELF_STAKE = 100000000000    ; 1000 ndau
 MAX_LEVERAGE = 3
-MAX_AGGREGATE_STAKE = 50_000_00_000_000 ; 50,000 ndau
+MAX_AGGREGATE_STAKE = 5000000000000 ; 50,000 ndau
 
-NINETY_DAY = 7_776_000_000_000      ; 60 * 60 * 24 * 90 * 1_000_000
+NINETY_DAY = 7776000000000      ; 60 * 60 * 24 * 90 * 1_000_000
 
-RESOLVE_STAKE_BASE = 5_00_000_000   ; 5 ndau
+RESOLVE_STAKE_BASE = 500000000   ; 5 ndau
 RESOLVE_STAKE_V_N = 5
 RESOLVE_STAKE_V_D = 100
 
@@ -22,7 +22,62 @@ RESOLVE_STAKE_V_D = 100
 TARGET = 3
 STAKE_TO = 5
 RULES = 8
+QTY = 11
 
+handler EVENT_DEFAULT {
+    fail
+}
+
+handler EVENT_STAKE {
+                                    ; primary rules stakeTo target tx aggregate from_primary from_target
+    pick 3                          ; primary rules stakeTo target tx aggregate from_primary from_target tx
+    call is_primary                 ; primary rules stakeTo target tx aggregate from_primary from_target is_primary
+    pick 8                          ; primary rules stakeTo target tx aggregate from_primary from_target is_primary primary
+    pick 5                          ; primary rules stakeTo target tx aggregate from_primary from_target is_primary primary tx
+    call is_primary_self_stake      ; primary rules stakeTo target tx aggregate from_primary from_target is_primary is_pss
+    or                              ; primary rules stakeTo target tx aggregate from_primary from_target (is_primary || is_pss)
+    ifnz
+        ;; in this case we depend only on the relations
+        ;; however, we need to define the relational rules
+        ;; we need from_external, from_primary
+        ;; from_external = aggregate - from_primary
+        ;; from_primary = from_primary + tx.qty
+
+                                    ; primary rules stakeTo target tx aggregate from_primary from_target
+        pick 2                      ; primary rules stakeTo target tx aggregate from_primary from_target aggregate
+        pick 2                      ; primary rules stakeTo target tx aggregate from_primary from_target aggregate from_primary
+        sub                         ; primary rules stakeTo target tx aggregate from_primary from_target from_external
+        pick 2                      ; primary rules stakeTo target tx aggregate from_primary from_target from_external from_primary
+        pick 5                      ; primary rules stakeTo target tx aggregate from_primary from_target from_external from_primary tx
+        field QTY                   ; primary rules stakeTo target tx aggregate from_primary from_target from_external from_primary qty
+        add                         ; primary rules stakeTo target tx aggregate from_primary from_target from_external from_primary
+        call relations_hold         ; primary rules stakeTo target tx aggregate from_primary from_target relations_hold
+        not                         ; invert relations_hold to return 0 for success
+        ret
+    endif
+
+    ;; if primary staker isn't set, we just accept it
+                                    ; primary rules stakeTo target tx aggregate from_primary from_target
+    over                            ; primary rules stakeTo target tx aggregate from_primary from_target from_primary
+    zero                            ; primary rules stakeTo target tx aggregate from_primary from_target from_primary 0
+    eq                              ; primary rules stakeTo target tx aggregate from_primary from_target (from_primary == 0)
+    ifnz
+        zero
+        ret
+    endif
+
+    ;; we need the relations, but with from_external == aggregate - from_primary + tx.qty
+                                    ; primary rules stakeTo target tx aggregate from_primary from_target
+    pick 2                          ; primary rules stakeTo target tx aggregate from_primary from_target aggregate
+    pick 2                          ; primary rules stakeTo target tx aggregate from_primary from_target aggregate from_primary
+    sub                             ; primary rules stakeTo target tx aggregate from_primary from_target (aggregate - from_primary)
+    pick 4                          ; primary rules stakeTo target tx aggregate from_primary from_target (aggregate - from_primary) tx
+    field QTY                       ; primary rules stakeTo target tx aggregate from_primary from_target (aggregate - from_primary) qty
+    add                             ; primary rules stakeTo target tx aggregate from_primary from_target from_external
+    pick 2                          ; primary rules stakeTo target tx aggregate from_primary from_target from_external from_primary
+    call relations_hold             ; primary rules stakeTo target tx aggregate from_primary from_target relations_hold
+    not                             ; 0 indicates success as a return code
+}
 
 func is_primary(1) {
                                     ; tx
