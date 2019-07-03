@@ -22,16 +22,16 @@
 ; 3 - BPC A
 ; 4 - BPC B
 ; 5 - BPC C
-; 6 - BPC D 
-; 7 - BPC E 
-; 8 - BPC F 
-; 9 - BPC G 
+; 6 - BPC D
+; 7 - BPC E
+; 8 - BPC F
+; 9 - BPC G
 ; 10 - BPC H
 ; 11 - BPC I
 
 ; bitmasks for signature groups
-AXIOM_MASK = 0x07
-BPC_MASK = 0xFF8
+AXIOM_MASK = 0b0_0000_0000_111
+BPC_MASK = 0b1_1111_1111_000
 
 ; we don't want any event we haven't specifically handled
 handler EVENT_DEFAULT {
@@ -137,6 +137,15 @@ handler EVENT_RELEASEFROMENDOWMENT, EVENT_TRANSFER, EVENT_TRANSFERANDLOCK {
     endif
 
     zero                            ; succeed
+}
+
+;; record price needs any two signatures
+handler EVENT_RECORDPRICE {
+;acct tx sigs
+    maxnum
+    push 2
+    call EnoughSigs
+    not
 }
 
 ; EnoughSigs expects to find a bitmask of signature indices found,

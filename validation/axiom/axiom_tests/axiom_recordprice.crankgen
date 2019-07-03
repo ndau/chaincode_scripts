@@ -1,6 +1,6 @@
-VAR event = EVENT_RECORDPRICE
-VAR sigfail = 0b_000_00_01, 0b_000_01_00, 0b_001_00_00
-VAR sigsuccess = 0b_000_00_11, 0b_000_01_01, 0b_000_11_00, 0b_011_00_00
+SVAR event = EVENT_RECORDPRICE
+SVAR sigfail = 0b_000_00_01, 0b_000_01_00, 0b_001_00_00
+SVAR sigsuccess = 0b_000_00_11, 0b_000_01_01, 0b_000_11_00, 0b_011_00_00
 
 BEGIN_TEMPLATE
 load ../axiom.chbin
