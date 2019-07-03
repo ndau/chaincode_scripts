@@ -31,10 +31,13 @@ QTY = 11
 handler EVENT_STAKE {
                                     ; primary rules stakeTo target tx aggregate from_primary from_target
     pick 3                          ; primary rules stakeTo target tx aggregate from_primary from_target tx
-    call is_primary                 ; primary rules stakeTo target tx aggregate from_primary from_target is_primary
-    pick 8                          ; primary rules stakeTo target tx aggregate from_primary from_target is_primary primary
-    pick 5                          ; primary rules stakeTo target tx aggregate from_primary from_target is_primary primary tx
-    call is_primary_self_stake      ; primary rules stakeTo target tx aggregate from_primary from_target is_primary is_pss
+    call is_primary                 ; primary rules stakeTo target tx aggregate from_primary from_target tx is_primary
+    swap ; primary rules stakeTo target tx aggregate from_primary from_target is_primary tx
+    pick 9                          ; primary rules stakeTo target tx aggregate from_primary from_target is_primary tx primary
+    swap ; primary rules stakeTo target tx aggregate from_primary from_target is_primary primary tx
+    call is_primary_self_stake      ; primary rules stakeTo target tx aggregate from_primary from_target is_primary primary tx is_pss
+    tuck 2                          ; primary rules stakeTo target tx aggregate from_primary from_target is_primary is_pss primary tx
+    drop2                           ; primary rules stakeTo target tx aggregate from_primary from_target is_primary is_pss
     or                              ; primary rules stakeTo target tx aggregate from_primary from_target (is_primary || is_pss)
     ifnz
         ;; in this case we depend only on the relations
