@@ -95,17 +95,20 @@ handler EVENT_UNSTAKE {
 
                                     ; primary rules stakeTo target tx aggregate from_primary from_target
     pick 3                          ; primary rules stakeTo target tx aggregate from_primary from_target tx
-    call is_primary                 ; primary rules stakeTo target tx aggregate from_primary from_target is_primary
+    call is_primary                 ; primary rules stakeTo target tx aggregate from_primary from_target tx is_primary
     ifnz
         push NINETY_DAY             ; 90 days hold
         zero                        ; success
         ret
     endif
 
-                                    ; primary rules stakeTo target tx aggregate from_primary from_target
+                                    ; primary rules stakeTo target tx aggregate from_primary from_target tx
+    drop                            ; primary rules stakeTo target tx aggregate from_primary from_target
     pick 7                          ; primary rules stakeTo target tx aggregate from_primary from_target primary
     pick 4                          ; primary rules stakeTo target tx aggregate from_primary from_target primary tx
-    call is_primary_self_stake      ; primary rules stakeTo target tx aggregate from_primary from_target is_pss
+    call is_primary_self_stake      ; primary rules stakeTo target tx aggregate from_primary from_target primary tx is_pss
+    tuck 2
+    drop2
     ifnz
                                     ; primary rules stakeTo target tx aggregate from_primary from_target
         push NINETY_DAY             ; ... tx aggregate from_primary from_target 90d
@@ -118,8 +121,8 @@ handler EVENT_UNSTAKE {
         add                         ; ... aggregate from_primary from_target 90d (from_primary-tx.qty) (from_primary+tx.qty)
         pick 5                      ; ... 90d (from_primary-tx.qty) (from_primary+tx.qty) aggregate
         swap                        ; ... 90d (from_primary-tx.qty) aggregate (from_primary+tx.qty)
-        sub                         ; ... 90d (from_primary-tx.qty) (aggregate-from_primary+tx.qty)
-        swap                        ; ... 90d (aggregate-from_primary+tx.qty) (from_primary-tx.qty)
+        sub                         ; ... 90d (from_primary-tx.qty) (aggregate-from_primary-tx.qty)
+        swap                        ; ... 90d (aggregate-from_primary-tx.qty) (from_primary-tx.qty)
         call relations_hold         ; ... 90d relations_hold
         not                         ; invert so 0 is success
         ret

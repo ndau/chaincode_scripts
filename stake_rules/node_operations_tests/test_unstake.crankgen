@@ -1,0 +1,72 @@
+LAMBDA NDAU = 10**8
+LAMBDA MIN_SELF_STAKE = 1000 * NDAU
+LAMBDA MAX_LEVERAGE = 3
+LAMBDA MAX_AGGREGATE_STAKE = 50000 * NDAU
+LAMBDA DAY = 1_000_000 * 60 * 60 * 24
+LAMBDA RESOLVE_STAKE_BASE = 5 * NDAU
+LAMBDA RESOLVE_STAKE_V_N = 5
+LAMBDA RESOLVE_STAKE_V_D = 100
+
+VAR external_aggregate = 0,1,5,15,49000,50000
+LAMBDA external_aggregate_napu = external_aggregate * NDAU
+
+VAR primary_stake = 0,1,5,15,49000,50000
+LAMBDA primary_stake_napu = primary_stake * NDAU
+
+VAR from_external_target = 0,1,5,15,49999,50000
+LAMBDA from_external_target_napu = from_external_target * NDAU
+
+VAR is_primary = 0,1
+VAR primary_already_staked = 0,1
+LAMBDA from_primary_napu = primary_stake_napu if primary_already_staked else 0
+LAMBDA aggregate_napu = external_aggregate_napu + primary_stake_napu if primary_already_staked else 0
+
+LAMBDA rules_addr = "rule account address"
+LAMBDA primary_addr = "primary account address"
+LAMBDA stake_to_addr = rules_addr if is_primary else primary_addr
+LAMBDA target_addr = primary_addr if is_primary else "third party address"
+LAMBDA from_target_napu = from_primary_napu if is_primary else from_external_target_napu
+VAR tx_qty = 1,5,1000,5000
+LAMBDA tx_qty_napu = tx_qty * NDAU
+
+LAMBDA known_primary_addr = primary_addr if primary_already_staked else ""
+
+LAMBDA is_primary_self_stake = target_addr == known_primary_addr
+
+LAMBDA relations_hold = lambda p,e: p >= MIN_SELF_STAKE and p * MAX_LEVERAGE >= e and p+e<=MAX_AGGREGATE_STAKE
+LAMBDA expect_bool = from_primary_napu == 0 or is_primary or relations_hold(from_primary_napu-tx_qty_napu, aggregate_napu-from_primary_napu-tx_qty_napu) or not is_primary_self_stake
+LAMBDA expect = 0 if expect_bool else -1
+LAMBDA expect2 = 0 if from_primary_napu == 0 else 90*24*60*60*1000000
+
+BEGIN_TEMPLATE
+clear
+event EVENT_UNSTAKE
+load ../node_operations.chbin
+
+; Stack:
+; from_target =  $from_target_napu
+; from_primary = $from_primary_napu
+; aggregate =    $aggregate_napu
+; tx =           {
+;                   TARGET:   $target_addr,
+;                   STAKE_TO: $stake_to_addr,
+;                   RULES:    $rules_addr,
+;                   QTY:      $tx_qty_napu,
+;                }
+; target_acct =  {}
+; staketo_acct = {}
+; rules_acct =   {}
+; primary =      $known_primary_addr
+
+push $known_primary_addr
+push {}
+push {}
+push {}
+push {3:$target_addr,5:$stake_to_addr,8:$rules_addr,11:$tx_qty_napu}
+push $aggregate_napu
+push $from_primary_napu
+push $from_target_napu
+
+run
+expect $expect
+expect $expect2
