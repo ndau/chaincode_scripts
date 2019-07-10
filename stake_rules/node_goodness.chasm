@@ -1,11 +1,111 @@
 ; Node Goodness (active node ranking)
 ;
-; This function will become more complex in the future. At the moment it is simply the total amount the node
-; account has staked to the Register Node staking rules account (including all co-stake)
+; STACK:
+;   total stake
+;   account data
+;   address
+;   total delegation
+;   vote history for this node
 ;
-; NEEDS TO BE CORRECTED TO MATCH THAT DESCRIPTION
+; We compute the goodness according to the following pseudocode:
+;
+;
+; history_size = 20
+;
+; def node_goodness(total_stake, total_delegated_ndau, vote_stats):
+;   weight = total_stake + total_delegated_ndau
+;
+;   # penalize nodes that don't participate
+;   penalties = sum(2 for v in vote_stats if not v.voted)
+;   # penalize participation against consensus more strongly
+;   penalties += sum(5 for v in vote_stats if v.against_consensus)
+;
+;   penalty_denominator = 2 * history_size
+;   if penalties > penalty_denominator:
+;     return 0
+;   return weight * (1-(penalties / penalty_denominator))
+
+VOTED = 121
+BYZANTINE = 122
+VOTEDF = 123
+BYZANTINEF = 124
+
+; multiply stake weight by this value to increase its importance relative to delegation power
+STAKE_WEIGHT = 1
+
+; history size is defined at https://github.com/oneiro-ndev/metanode/blob/180b6970aaf3df5cdd2ba05607e5ca36e08f5d56/pkg/meta/state/vote_stats.go#L14
+HISTORY_SIZE = 20
+
+; don't change this
+RATE_DENOMINATOR = 1000000000000    ; 10^12
 
 handler EVENT_DEFAULT {
-    drop
-    field ACCT_BALANCE
+                                    ; vote_history total_delegation address account_data total_stake
+    push STAKE_WEIGHT               ; vote_history total_delegation address account_data total_stake stake_weight
+    mul                             ; vote_history total_delegation address account_data weighted_stake
+
+    roll 3                          ; vote_history address account_data weighted_stake total_delegation
+    add                             ; vote_history address account_data weight
+    roll 3                          ; address account_data weight vote_history
+
+    ;; past this point we will never use address or account_data; they still exist
+    ;; at the bottom of the stack, but for expediency and conciseness we will
+    ;; no longer write them out
+
+    deco non_vote_penalty VOTEDF    ; weight vote_history
+    deco byzantine_penalty BYZANTINEF; weight vote_history
+
+    dup                             ; weight vote_history vote_history
+    fieldl VOTEDF                   ; weight vote_history vote_penalty_list
+    sum                             ; weight vote_history vote_penalty
+
+    swap                            ; weight vote_penalty vote_history
+    fieldl BYZANTINEF               ; weight vote_penalty byzantine_penalty_list
+    sum                             ; weight vote_penalty byzantine_penalty
+
+    add                             ; weight penalty
+    dup                             ; weight penalty penalty
+    push HISTORY_SIZE               ; weight penalty penalty history_size
+    push 2
+    mul
+    gt                              ; weight penalty (penalty > history_size)
+    ifnz                            ; if
+        zero
+        ret
+    endif
+
+                                    ; weight penalty
+    push HISTORY_SIZE               ; weight penalty history_size
+    push 2
+    mul
+    push RATE_DENOMINATOR           ; weight penalty history_size rate_denominator
+    swap                            ; weight penalty rate_denominator history_size
+    muldiv                          ; weight penalty_pct
+    neg                             ; weight (-penalty_pct)
+    push RATE_DENOMINATOR           ; weight (-penalty_pct) rate_denominator
+    add                             ; weight (1-penalty_pct)
+    push RATE_DENOMINATOR           ; weight (1-penalty_pct) rate_denominator
+    muldiv                          ; penalized_weight
+}
+
+; called via deco; therefore needs no args: it always gets a list entry
+func non_vote_penalty(0) {
+                                    ; node_round_stats
+    field VOTED                     ; stats_voted
+    ifz                             ; zero == false == didn't vote
+        push 2
+    else
+        zero
+    endif
+}
+
+; called via deco; therefore needs no args: it always gets a list entry
+func byzantine_penalty(0) {
+                                    ; node_round_stats
+    field BYZANTINE                 ; stats_againstconsensus
+    ifnz                            ; == true == voted against consensus
+        push 5
+    else
+        zero
+    endif
 }
