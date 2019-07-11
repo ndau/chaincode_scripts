@@ -1,0 +1,209 @@
+; Node Operations
+;
+; Govern staking, node registration, and the reverse of both of those operations.
+;
+; See https://paper.dropbox.com/doc/Node-Operations-Rules-Proposal--AgKAV7c_y9Wi4HIPGd6UVydGAQ-fQtSgwmn07FLQVFi4Jlmd
+; for pseudocode and rationale.
+
+; napu per ndau
+NDAU = 100000000
+
+MIN_SELF_STAKE = 100000000000       ; 1000 ndau
+MAX_LEVERAGE = 3
+MAX_AGGREGATE_STAKE = 5000000000000 ; 50,000 ndau
+
+NINETY_DAY = 7776000000000          ; 60 * 60 * 24 * 90 * 1_000_000
+
+RESOLVE_STAKE_BASE = 500000000      ; 5 ndau
+RESOLVE_STAKE_V_N = 5
+RESOLVE_STAKE_V_D = 100
+
+;; tx field accessors
+TARGET = 3
+STAKE_TO = 5
+RULES = 8
+QTY = 11
+
+;; the absence of an EVENT_DEFAULT handler is equivalent to manually defining
+;; it to fail: in either case, calling in with an unspecified function causes
+;; a failure
+
+handler EVENT_STAKE {
+                                    ; primary rules stakeTo target tx aggregate from_primary from_target
+    pick 3                          ; primary rules stakeTo target tx aggregate from_primary from_target tx
+    call is_primary                 ; primary rules stakeTo target tx aggregate from_primary from_target tx is_primary
+    swap ; primary rules stakeTo target tx aggregate from_primary from_target is_primary tx
+    pick 9                          ; primary rules stakeTo target tx aggregate from_primary from_target is_primary tx primary
+    swap ; primary rules stakeTo target tx aggregate from_primary from_target is_primary primary tx
+    call is_primary_self_stake      ; primary rules stakeTo target tx aggregate from_primary from_target is_primary primary tx is_pss
+    tuck 2                          ; primary rules stakeTo target tx aggregate from_primary from_target is_primary is_pss primary tx
+    drop2                           ; primary rules stakeTo target tx aggregate from_primary from_target is_primary is_pss
+    or                              ; primary rules stakeTo target tx aggregate from_primary from_target (is_primary || is_pss)
+    ifnz
+        ;; in this case we depend only on the relations
+        ;; however, we need to define the relational rules
+        ;; we need from_external, from_primary
+        ;; from_external = aggregate - from_primary
+        ;; from_primary = from_primary + tx.qty
+
+                                    ; primary rules stakeTo target tx aggregate from_primary from_target
+        pick 2                      ; primary rules stakeTo target tx aggregate from_primary from_target aggregate
+        pick 2                      ; primary rules stakeTo target tx aggregate from_primary from_target aggregate from_primary
+        sub                         ; primary rules stakeTo target tx aggregate from_primary from_target from_external
+        pick 2                      ; primary rules stakeTo target tx aggregate from_primary from_target from_external from_primary
+        pick 5                      ; primary rules stakeTo target tx aggregate from_primary from_target from_external from_primary tx
+        field QTY                   ; primary rules stakeTo target tx aggregate from_primary from_target from_external from_primary qty
+        add                         ; primary rules stakeTo target tx aggregate from_primary from_target from_external from_primary
+        call relations_hold         ; primary rules stakeTo target tx aggregate from_primary from_target relations_hold
+        not                         ; invert relations_hold to return 0 for success
+        ret
+    endif
+
+    ;; if primary staker isn't set, we just accept it
+                                    ; primary rules stakeTo target tx aggregate from_primary from_target
+    over                            ; primary rules stakeTo target tx aggregate from_primary from_target from_primary
+    zero                            ; primary rules stakeTo target tx aggregate from_primary from_target from_primary 0
+    eq                              ; primary rules stakeTo target tx aggregate from_primary from_target (from_primary == 0)
+    ifnz
+        zero
+        ret
+    endif
+
+    ;; we need the relations, but with from_external == aggregate - from_primary + tx.qty
+                                    ; primary rules stakeTo target tx aggregate from_primary from_target
+    pick 2                          ; primary rules stakeTo target tx aggregate from_primary from_target aggregate
+    pick 2                          ; primary rules stakeTo target tx aggregate from_primary from_target aggregate from_primary
+    sub                             ; primary rules stakeTo target tx aggregate from_primary from_target (aggregate - from_primary)
+    pick 4                          ; primary rules stakeTo target tx aggregate from_primary from_target (aggregate - from_primary) tx
+    field QTY                       ; primary rules stakeTo target tx aggregate from_primary from_target (aggregate - from_primary) qty
+    add                             ; primary rules stakeTo target tx aggregate from_primary from_target from_external
+    pick 2                          ; primary rules stakeTo target tx aggregate from_primary from_target from_external from_primary
+    call relations_hold             ; primary rules stakeTo target tx aggregate from_primary from_target relations_hold
+    not                             ; 0 indicates success as a return code
+}
+
+handler EVENT_UNSTAKE {
+                                    ; primary rules stakeTo target tx aggregate from_primary from_target
+    over                            ; primary rules stakeTo target tx aggregate from_primary from_target from_primary
+    zero                            ; primary rules stakeTo target tx aggregate from_primary from_target from_primary 0
+    eq                              ; primary rules stakeTo target tx aggregate from_primary from_target (from_primary == 0)
+    ifnz
+        zero                        ; 0 days hold
+        zero                        ; success
+        ret
+    endif
+
+                                    ; primary rules stakeTo target tx aggregate from_primary from_target
+    pick 3                          ; primary rules stakeTo target tx aggregate from_primary from_target tx
+    call is_primary                 ; primary rules stakeTo target tx aggregate from_primary from_target tx is_primary
+    ifnz
+        push NINETY_DAY             ; 90 days hold
+        zero                        ; success
+        ret
+    endif
+
+                                    ; primary rules stakeTo target tx aggregate from_primary from_target tx
+    drop                            ; primary rules stakeTo target tx aggregate from_primary from_target
+    pick 7                          ; primary rules stakeTo target tx aggregate from_primary from_target primary
+    pick 4                          ; primary rules stakeTo target tx aggregate from_primary from_target primary tx
+    call is_primary_self_stake      ; primary rules stakeTo target tx aggregate from_primary from_target primary tx is_pss
+    tuck 2
+    drop2
+    ifnz
+                                    ; primary rules stakeTo target tx aggregate from_primary from_target
+        push NINETY_DAY             ; ... tx aggregate from_primary from_target 90d
+        pick 2                      ; ... tx aggregate from_primary from_target 90d from_primary
+        pick 5                      ; ... tx aggregate from_primary from_target 90d from_primary tx
+        field QTY                   ; ... aggregate from_primary from_target 90d from_primary tx.qty
+        dup2                        ; ... aggregate from_primary from_target 90d from_primary tx.qty from_primary tx.qty
+        sub                         ; ... aggregate from_primary from_target 90d from_primary tx.qty (from_primary-tx.qty)
+        tuck 2                      ; ... aggregate from_primary from_target 90d (from_primary-tx.qty) from_primary tx.qty
+        add                         ; ... aggregate from_primary from_target 90d (from_primary-tx.qty) (from_primary+tx.qty)
+        pick 5                      ; ... 90d (from_primary-tx.qty) (from_primary+tx.qty) aggregate
+        swap                        ; ... 90d (from_primary-tx.qty) aggregate (from_primary+tx.qty)
+        sub                         ; ... 90d (from_primary-tx.qty) (aggregate-from_primary-tx.qty)
+        swap                        ; ... 90d (aggregate-from_primary-tx.qty) (from_primary-tx.qty)
+        call relations_hold         ; ... 90d relations_hold
+        not                         ; invert so 0 is success
+        ret
+    endif
+
+    push NINETY_DAY
+    zero
+}
+
+handler EVENT_REGISTERNODE {
+    ;; this function is only in here for future-proofing; it always returns true for now
+    zero
+}
+
+;; ResolveStake, but the event isn't predefined yet
+handler 26 {
+                                    ; primary rules stakeTo target tx aggregate from_primary from_target
+    pick 4                          ; primary rules stakeTo target tx aggregate from_primary from_target target
+    field ACCT_BALANCE              ; primary rules stakeTo target tx aggregate from_primary from_target target.balance
+    push RESOLVE_STAKE_BASE         ; primary rules stakeTo target tx aggregate from_primary from_target target.balance RESOLVE_STAKE_BASE
+    over                            ; primary rules stakeTo target tx aggregate from_primary from_target target.balance RESOLVE_STAKE_BASE target.balance
+    push RESOLVE_STAKE_V_N          ; primary rules stakeTo target tx aggregate from_primary from_target target.balance RESOLVE_STAKE_BASE target.balance RESOLVE_STAKE_V_N
+    push RESOLVE_STAKE_V_D          ; primary rules stakeTo target tx aggregate from_primary from_target target.balance RESOLVE_STAKE_BASE target.balance RESOLVE_STAKE_V_N RESOLVE_STAKE_V_D
+    muldiv                          ; primary rules stakeTo target tx aggregate from_primary from_target target.balance RESOLVE_STAKE_BASE (target.balance*RESOLVE_STAKE_V_N/RESOLVE_STAKE_V_D)
+    add                             ; primary rules stakeTo target tx aggregate from_primary from_target target.balance (RESOLVE_STAKE_BASE+(target.balance*RESOLVE_STAKE_V_N/RESOLVE_STAKE_V_D))
+
+    ;; we'll now abbreviate the qty (RESOLVE_STAKE_BASE+(target.balance*RESOLVE_STAKE_V_N/RESOLVE_STAKE_V_D))
+    ;; as price
+    ;; we'll also now elide the elements no longer needed
+
+                                    ; target.balance price
+    dup2                            ; target.balance price target.balance price
+    lt                              ; target.balance price (target.balance<price)
+    ifnz
+        swap                        ; price target.balance
+    endif
+    ;; the lesser of target.balance and price is on top of the stack at return time
+}
+
+func is_primary(1) {
+                                    ; tx
+    dup                             ; tx tx
+    field STAKE_TO                  ; tx stake_to
+    swap                            ; stake_to tx
+    field RULES                     ; stake_to rules
+    eq
+}
+
+func is_primary_self_stake(2) {
+                                    ; primary tx
+    field TARGET                    ; primary target
+    eq
+}
+
+func relations_hold(2) {
+    ;; from_primary >= MIN_SELF_STAKE
+                                    ; from_external from_primary
+    dup                             ; from_external from_primary from_primary
+    push MIN_SELF_STAKE             ; from_external from_primary from_primary MIN_SELF_STAKE
+    lt                              ; from_external from_primary (from_primary<MIN_SELF_STAKE)
+    ifnz
+        false
+        ret
+    endif
+
+    ;; from_primary * MAX_LEVERAGE >= from_external
+                                    ; from_external from_primary
+    dup                             ; from_external from_primary from_primary
+    push MAX_LEVERAGE               ; from_external from_primary from_primary MAX_LEVERAGE
+    mul                             ; from_external from_primary (from_primary*MAX_LEVERAGE)
+    pick 2                          ; from_external from_primary (from_primary*MAX_LEVERAGE) from_external
+    lt                              ; from_external from_primary ((from_primary*MAX_LEVERAGE)<from_external)
+    ifnz
+        false
+        ret
+    endif
+
+    ;; from_external + from_primary <= MAX_AGGREGATE_STAKE
+                                    ; from_external from_primary
+    add                             ; (from_external+from_primary)
+    push MAX_AGGREGATE_STAKE        ; (from_external+from_primary) MAX_AGGREGATE_STAKE
+    gt                              ; ((from_external+from_primary)>MAX_AGGREGATE_STAKE)
+    not                             ; ((from_external+from_primary)<=MAX_AGGREGATE_STAKE)
+}

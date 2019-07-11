@@ -1,4 +1,4 @@
-VAR event = EVENT_CHANGEVALIDATION
+SVAR event = EVENT_CHANGEVALIDATION
 
 BEGIN_TEMPLATE
 load ../axiom.chbin
@@ -44,6 +44,6 @@ run succeed
 clear
 push 0
 push { TX_QUANTITY: nd100 }
-push 0b_011011011_00
+push 0b_011011011_000
 event $event
 run succeed
