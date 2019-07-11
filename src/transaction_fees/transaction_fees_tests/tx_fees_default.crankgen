@@ -1,4 +1,4 @@
-VAR event = EVENT_DEFAULT
+SVAR event = EVENT_DEFAULT
 VAR fee_ndau = 5000
 VAR ndau_to_napu = 100000000
 
