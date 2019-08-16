@@ -16,7 +16,7 @@ handler EVENT_CREDITEAI, EVENT_CLAIMNODEREWARD {
     zero                            ; any signature is acceptable
 }
 
-handler EVENT_CHANGEVALIDATION, EVENT_TRANSFER, EVENT_LOCK, EVENT_SETREWARDSDESTINATION, EVENT_DELEGATE, EVENT_NOTIFY, EVENT_REGISTERNODE, EVENT_UNSTAKE {
+handler EVENT_CHANGEVALIDATION, EVENT_TRANSFER, EVENT_LOCK, EVENT_SETREWARDSDESTINATION, EVENT_DELEGATE, EVENT_NOTIFY, EVENT_REGISTERNODE, EVENT_UNSTAKE, EVENT_STAKE {
 
                                     ; stack top on right -- sig bitmask on top, then tx, then account
                                     ; get rid of acct since we don't need to look at it

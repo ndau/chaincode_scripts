@@ -22,10 +22,10 @@
 ; 3 - BPC A
 ; 4 - BPC B
 ; 5 - BPC C
-; 6 - BPC D 
-; 7 - BPC E 
-; 8 - BPC F 
-; 9 - BPC G 
+; 6 - BPC D
+; 7 - BPC E
+; 8 - BPC F
+; 9 - BPC G
 ; 10 - BPC H
 ; 11 - BPC I
 
@@ -39,7 +39,7 @@ handler EVENT_DEFAULT {
 }
 
 handler EVENT_ISSUE {
-    zero            ; only one signature needed
+    zero                            ; only one signature needed
 }
 
 ; For ChangeValidation, the rule is:
