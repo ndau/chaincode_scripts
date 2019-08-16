@@ -2,7 +2,8 @@ VAR total_stake = 1000,5000,12345,100000
 VAR total_delegated_ndau = 1000,5000,54321,100000
 VAR missed_votes = 0,1,5,20
 VAR byz_votes = 0,1,5,8,20
-LAMBDA vote_stats = [{121:i<(20-missed_votes),122:i<byz_votes} for i in range(20)]
+; this was originally range(20) but now we're just going to sample to reduce combinatorics
+LAMBDA vote_stats = [{121:i<(20-missed_votes),122:i<byz_votes} for i in [0, 1, 2, 3, 7, 8, 13, 19]]
 
 VAR stakemul = 1
 LAMBDA weight = (stakemul * total_stake) + total_delegated_ndau
