@@ -64,11 +64,11 @@ handler EVENT_REGISTERNODE {
 }
 
 ;; ResolveStake is expected to return the fee for ResolveStake that goes to the rules account
-;;
+;; it also gets target and rules accounts on the stack instead of just their addresses
 handler EVENT_RESOLVESTAKE {
-                                    ; primary rules stakeTo target tx aggregate from_primary from_target
-    pick 4                          ; primary rules stakeTo target tx aggregate from_primary from_target target
-    field ACCT_BALANCE              ; primary rules stakeTo target tx aggregate from_primary from_target target.balance
+                                    ; primary rules_acct stakeTo target_acct tx aggregate from_primary from_target
+    pick 4                          ; primary rules_acct stakeTo target_acct tx aggregate from_primary from_target target_acct
+    field ACCT_BALANCE              ; primary rules_acct stakeTo target_acct tx aggregate from_primary from_target target.balance
     push RESOLVE_STAKE_FEE          ; ... target.balance RESOLVE_STAKE_FEE
                                     ; target.balance FEE
     dup2                            ; target.balance FEE target.balance FEE
