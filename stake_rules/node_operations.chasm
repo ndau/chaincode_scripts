@@ -59,7 +59,8 @@ handler EVENT_REGISTERNODE {
                                     ; primary rules stakeTo target tx aggregate from_primary from_target
     over                            ; primary rules stakeTo target tx aggregate from_primary from_target from_primary
     push MIN_PRIMARY_STAKE          ; primary rules stakeTo target tx aggregate from_primary from_target from_primary MIN_PRIMARY
-    lt                              ; if it's less than min primary then fail the attempt to register
+    gte                             ; if it's at least the min then allow it
+    not                             ; invert the sense of the test
 }
 
 ;; ResolveStake is expected to return the fee for ResolveStake that goes to the rules account
