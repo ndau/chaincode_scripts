@@ -30,15 +30,14 @@ handler EVENT_STAKE {
                                     ; primary rules stakeTo target tx aggregate from_primary from_target
     pick 3                          ; primary rules stakeTo target tx aggregate from_primary from_target tx
     field TX_QUANTITY               ; primary rules stakeTo target tx aggregate from_primary from_target qty
-    push MIN_TX_QTY                 ; primary rules stakeTo target tx aggregate from_primary from_target qty MINQTY
-    lt                              ; primary rules stakeTo target tx aggregate from_primary from_target (qty < MINQTY)
-    ifnz                            ; primary rules stakeTo target tx aggregate from_primary from_target
+    dup         ; primary rules stakeTo target tx aggregate from_primary from_target qty qty
+    push MIN_TX_QTY                 ; primary rules stakeTo target tx aggregate from_primary from_target qty qty MINQTY
+    lt                              ; primary rules stakeTo target tx aggregate from_primary from_target qty (qty < MINQTY)
+    ifnz                            ; primary rules stakeTo target tx aggregate from_primary from_target qty
         neg1                        ; fail with -1 on the stack
         ret
     endif
-                                    ; primary rules stakeTo target tx aggregate from_primary from_target
-    pick 3                          ; primary rules stakeTo target tx aggregate from_primary from_target tx
-    field TX_QUANTITY               ; primary rules stakeTo target tx aggregate from_primary from_target qty
+                                    ; primary rules stakeTo target tx aggregate from_primary from_target qty
     pick 3                          ; primary rules stakeTo target tx aggregate from_primary from_target qty aggregate
     add                             ; primary rules stakeTo target tx aggregate from_primary from_target new_aggregate
     push MAX_AGGREGATE_STAKE        ; primary rules stakeTo target tx aggregate from_primary from_target new_aggregate MAXSTAKE

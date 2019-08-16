@@ -1,6 +1,6 @@
 ; ndev nodes
 ; Permitted Transactions:   ChangeValidation, CreditEAI, ClaimNodeReward, Transfer,
-;                           Lock, SetRewardsDestination, Notify, Delegate, Unstake, RegisterNode
+;                           Lock, SetRewardsDestination, Notify, Delegate, Unstake, RegisterNode, Stake
 ; Validation Keys: node key, 3 ndev Keys
 ; Validation Rules:
 
