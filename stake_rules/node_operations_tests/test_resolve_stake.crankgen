@@ -15,8 +15,8 @@ LAMBDA primary_stake_napu = primary_stake * NDAU
 VAR existing_target_stake = 0,300,49900,50000
 LAMBDA existing_target_stake_napu = existing_target_stake * NDAU
 
-VAR tx_qty = 0,1,99,101,50000,50001
-LAMBDA tx_qty_napu = tx_qty * NDAU
+VAR target_balance = 1,2,4,5,99,50000
+LAMBDA target_balance_napu = target_balance * NDAU
 
 LAMBDA is_primary = 0,1
 
@@ -28,39 +28,33 @@ LAMBDA primary_addr = "primary account address"
 LAMBDA stake_to_addr = rules_addr if is_primary else primary_addr
 LAMBDA target_addr = primary_addr if is_primary else "third party address"
 
-LAMBDA expect_bool = ((tx_qty_napu >= MIN_TX_QTY) and (aggregate_napu+tx_qty_napu <= MAX_AGGREGATE_STAKE))
-LAMBDA expect = 0 if expect_bool else -1
+LAMBDA expect = target_balance_napu if target_balance_napu < RESOLVE_STAKE_FEE else RESOLVE_STAKE_FEE
 
 BEGIN_TEMPLATE
 clear
-event EVENT_STAKE
+event EVENT_RESOLVESTAKE
 load ../node_operations.chbin
 
-; expect_bool == $expect_bool
 ; expect = $expect
-; (($tx_qty_napu >= $MIN_TX_QTY) and ($aggregate_napu+$tx_qty_napu <= $MAX_AGGREGATE_STAKE))
+; target_balance_napu = $target_balance_napu
+; RESOLVE_STAKE_FEE = $RESOLVE_STAKE_FEE
 
 
 ; Stack:
 ; from_target =  $from_target_napu
 ; from_primary = $primary_stake_napu
 ; aggregate =    $aggregate_napu
-; tx =           {
-;                   TARGET:   $target_addr,
-;                   STAKE_TO: $stake_to_addr,
-;                   RULES:    $rules_addr,
-;                   QTY:      $tx_qty_napu,
-;                }
-; target_addr =   $target_addr
+; tx =           {}
+; target_acct =   {1:$target_addr, ACCT_BALANCE:$target_balance_napu}
 ; stake_to_addr = $stake_to_addr
-; rules_addr =    $rules_addr
+; rules_addr =    {1:$rules_addr, ACCT_BALANCE:$NDAU}
 ; primary_addr =  $primary_addr
 
 push $primary_addr
-push $rules_addr
+push {1:$rules_addr, ACCT_BALANCE:$NDAU}
 push $stake_to_addr
-push $target_addr
-push {3:$target_addr,5:$stake_to_addr,8:$rules_addr,11:$tx_qty_napu}
+push {1:$target_addr, ACCT_BALANCE:$target_balance_napu}
+push {}
 push $aggregate_napu
 push $primary_stake_napu
 push $from_target_napu

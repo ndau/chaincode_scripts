@@ -14,5 +14,5 @@ handler EVENT_DEFAULT {
 }
 
 handler EVENT_CHANGEVALIDATION {
-    zero             ; if we get here at all there's at least one signature
+    zero                            ; if we get here at all there's at least one signature
 }

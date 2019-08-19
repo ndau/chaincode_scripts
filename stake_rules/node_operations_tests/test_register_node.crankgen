@@ -1,22 +1,18 @@
+; these tests are way more elaborate than they need to be because we may want them to be
+; more sophisticated someday; we use limited test cases, but these can be expanded if
+; the logic gets more sophisticated.
+
 LAMBDA NDAU = 10**8
-LAMBDA MIN_TX_QTY = 100 * NDAU
-LAMBDA MAX_AGGREGATE_STAKE = 50000 * NDAU
-LAMBDA DAY = 1_000_000 * 60 * 60 * 24
-LAMBDA RESOLVE_STAKE_FEE = 5 * NDAU
+LAMBDA MIN_PRIMARY_STAKE = 1000 * NDAU
 
-
-
-VAR costake = 0,1,13,49900,50000
+VAR costake = 0,1,49900,50000
 LAMBDA costake_napu = costake * NDAU
 
-VAR primary_stake = 0,1,300,49900,50000
+VAR primary_stake = 0,1,999,1000,50000
 LAMBDA primary_stake_napu = primary_stake * NDAU
 
-VAR existing_target_stake = 0,300,49900,50000
+VAR existing_target_stake = 0,300,50000
 LAMBDA existing_target_stake_napu = existing_target_stake * NDAU
-
-VAR tx_qty = 0,1,99,101,50000,50001
-LAMBDA tx_qty_napu = tx_qty * NDAU
 
 LAMBDA is_primary = 0,1
 
@@ -28,29 +24,24 @@ LAMBDA primary_addr = "primary account address"
 LAMBDA stake_to_addr = rules_addr if is_primary else primary_addr
 LAMBDA target_addr = primary_addr if is_primary else "third party address"
 
-LAMBDA expect_bool = ((tx_qty_napu >= MIN_TX_QTY) and (aggregate_napu+tx_qty_napu <= MAX_AGGREGATE_STAKE))
+LAMBDA expect_bool = (primary_stake_napu >= MIN_PRIMARY_STAKE)
 LAMBDA expect = 0 if expect_bool else -1
+
 
 BEGIN_TEMPLATE
 clear
-event EVENT_STAKE
+event EVENT_REGISTERNODE
 load ../node_operations.chbin
 
 ; expect_bool == $expect_bool
 ; expect = $expect
-; (($tx_qty_napu >= $MIN_TX_QTY) and ($aggregate_napu+$tx_qty_napu <= $MAX_AGGREGATE_STAKE))
-
+; ($primary_stake >= $MIN_PRIMARY_STAKE)
 
 ; Stack:
 ; from_target =  $from_target_napu
 ; from_primary = $primary_stake_napu
 ; aggregate =    $aggregate_napu
-; tx =           {
-;                   TARGET:   $target_addr,
-;                   STAKE_TO: $stake_to_addr,
-;                   RULES:    $rules_addr,
-;                   QTY:      $tx_qty_napu,
-;                }
+; tx =           {}
 ; target_addr =   $target_addr
 ; stake_to_addr = $stake_to_addr
 ; rules_addr =    $rules_addr
@@ -60,7 +51,7 @@ push $primary_addr
 push $rules_addr
 push $stake_to_addr
 push $target_addr
-push {3:$target_addr,5:$stake_to_addr,8:$rules_addr,11:$tx_qty_napu}
+push {}
 push $aggregate_napu
 push $primary_stake_napu
 push $from_target_napu
