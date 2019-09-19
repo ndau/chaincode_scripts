@@ -65,9 +65,6 @@ handler EVENT_DEFAULT {
     muldiv                          ; vote_history total_delegation address account_data total_stake age_bonus^2
     dup
     push RATE_DENOMINATOR
-    muldiv                          ; vote_history total_delegation address account_data total_stake age_bonus^3
-    dup
-    push RATE_DENOMINATOR
     muldiv                          ; vote_history total_delegation address account_data total_stake age_bonus
     ;; now tuck this away at the bottom of the stack where we can retrieve it later
     tuck 5                          ; age_bonus vote_history total_delegation address account_data total_stake

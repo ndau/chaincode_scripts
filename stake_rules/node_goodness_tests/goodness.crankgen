@@ -41,4 +41,7 @@ event 0
 
 run
 
-expect $expect
+;; these calculations are performed in different ways, and might encounter
+;; small errors from differences between floating-point and integer math.
+
+expect $expect --delta 1
