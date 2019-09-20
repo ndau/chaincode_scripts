@@ -57,4 +57,4 @@ push $primary_stake_napu
 push $from_target_napu
 
 run
-expect $expect
+expect -- $expect
