@@ -50,6 +50,10 @@ handler EVENT_TRANSFERANDLOCK {
     add
 }
 
+handler EVENT_BURN {
+    zero ; no point charging people to burn ndau
+}
+
 ; size-based calculation
 ; 0.005 ndau + 0.0001 ndau/byte
 ; expects to be called immediately, so the initial stack is size tx
