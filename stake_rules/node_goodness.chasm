@@ -6,13 +6,18 @@
 ;   address
 ;   total delegation
 ;   vote history for this node
+;   timestamp of most recent RegisterNode
 ;
 ; We compute the goodness according to the following pseudocode:
 ;
 ;
 ; history_size = 20
+; genesis = <official timestamp of blockchain genesis>
 ;
-; def node_goodness(total_stake, total_delegated_ndau, vote_stats):
+; def age_bonus(registration):
+;   return ((now-registration)/(now-genesis))**4
+;
+; def node_goodness(total_stake, total_delegated_ndau, vote_stats, registration):
 ;   weight = total_stake + total_delegated_ndau
 ;
 ;   # penalize nodes that don't participate
@@ -23,7 +28,9 @@
 ;   penalty_denominator = 2 * history_size
 ;   if penalties > penalty_denominator:
 ;     return 0
-;   return weight * (1-(penalties / penalty_denominator))
+;   return weight * (1-(penalties / penalty_denominator)) * age_bonus(registration)
+
+GENESIS = 2019-05-11T03:46:40.570549Z ; actually block 1 time, but close enough
 
 VOTED = 121
 BYZANTINE = 122
@@ -40,7 +47,28 @@ HISTORY_SIZE = 20
 RATE_DENOMINATOR = 1000000000000    ; 10^12
 
 handler EVENT_DEFAULT {
-                                    ; vote_history total_delegation address account_data total_stake
+    ;; start by computing the age bonus:
+    ;;   ((now-registration)/(now-genesis))^4
+                                    ; rn_ts vote_history total_delegation address account_data total_stake
+    now                             ; rn_ts vote_history total_delegation address account_data total_stake now
+    roll 6                          ; vote_history total_delegation address account_data total_stake now rn_ts
+    sub                             ; vote_history total_delegation address account_data total_stake age
+    push RATE_DENOMINATOR           ; vote_history total_delegation address account_data total_stake age RATE_DENOMINATOR
+    now                             ; vote_history total_delegation address account_data total_stake age RATE_DENOMINATOR now
+    pusht GENESIS                   ; vote_history total_delegation address account_data total_stake age RATE_DENOMINATOR now GENESIS
+    sub                             ; vote_history total_delegation address account_data total_stake age RATE_DENOMINATOR sys_age
+    muldiv                          ; vote_history total_delegation address account_data total_stake age_bonus^1
+    ;; we have the base fraction for the age bonus; now exponentiate it
+    dup
+    push RATE_DENOMINATOR
+    muldiv                          ; vote_history total_delegation address account_data total_stake age_bonus^2
+    dup
+    push RATE_DENOMINATOR
+    muldiv                          ; vote_history total_delegation address account_data total_stake age_bonus
+    ;; now tuck this away at the bottom of the stack where we can retrieve it later
+    tuck 5                          ; age_bonus vote_history total_delegation address account_data total_stake
+
+
     push STAKE_WEIGHT               ; vote_history total_delegation address account_data total_stake stake_weight
     mul                             ; vote_history total_delegation address account_data weighted_stake
 
@@ -86,6 +114,13 @@ handler EVENT_DEFAULT {
     add                             ; weight (1-penalty_pct)
     push RATE_DENOMINATOR           ; weight (1-penalty_pct) rate_denominator
     muldiv                          ; penalized_weight
+
+    ;; retrieve the age bonus
+    ;; the full stack:
+                                    ; age_bonus address account_data penalized_weight
+    roll 3                          ; address account_data penalized_weight age_bonus
+    push RATE_DENOMINATOR           ; penalized_weight age_bonus RATE_DENOMINATOR
+    muldiv                          ; goodness
 }
 
 ; called via deco; therefore needs no args: it always gets a list entry
