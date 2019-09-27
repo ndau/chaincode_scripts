@@ -53,11 +53,10 @@ handler EVENT_DEFAULT {
     now                             ; rn_ts vote_history total_delegation address account_data total_stake now
     roll 6                          ; vote_history total_delegation address account_data total_stake now rn_ts
     sub                             ; vote_history total_delegation address account_data total_stake age
-    now                             ; vote_history total_delegation address account_data total_stake age now
-    pusht GENESIS                   ; vote_history total_delegation address account_data total_stake age now GENESIS
-    sub                             ; vote_history total_delegation address account_data total_stake age sys_age
-    push RATE_DENOMINATOR           ; vote_history total_delegation address account_data total_stake age sys_age RATE_DENOMINATOR
-    swap                            ; vote_history total_delegation address account_data total_stake age RATE_DENOMINATOR sys_age
+    push RATE_DENOMINATOR           ; vote_history total_delegation address account_data total_stake age RATE_DENOMINATOR
+    now                             ; vote_history total_delegation address account_data total_stake age RATE_DENOMINATOR now
+    pusht GENESIS                   ; vote_history total_delegation address account_data total_stake age RATE_DENOMINATOR now GENESIS
+    sub                             ; vote_history total_delegation address account_data total_stake age RATE_DENOMINATOR sys_age
     muldiv                          ; vote_history total_delegation address account_data total_stake age_bonus^1
     ;; we have the base fraction for the age bonus; now exponentiate it
     dup
