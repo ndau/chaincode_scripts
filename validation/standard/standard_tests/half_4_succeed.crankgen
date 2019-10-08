@@ -1,3 +1,12 @@
+;  ----- ---- --- -- -
+;  Copyright 2019 Oneiro NA, Inc. All Rights Reserved.
+; 
+;  Licensed under the Apache License 2.0 (the "License").  You may not use
+;  this file except in compliance with the License.  You can obtain a copy
+;  in the file LICENSE in the source distribution or at
+;  https://www.apache.org/licenses/LICENSE-2.0.txt
+;  - -- --- ---- -----
+
 SVAR sig = 0011,0101,0110,1010,1100,0111,1011,1101,1110,1111
 
 BEGIN_TEMPLATE
