@@ -1,3 +1,12 @@
+;  ----- ---- --- -- -
+;  Copyright 2019 Oneiro NA, Inc. All Rights Reserved.
+; 
+;  Licensed under the Apache License 2.0 (the "License").  You may not use
+;  this file except in compliance with the License.  You can obtain a copy
+;  in the file LICENSE in the source distribution or at
+;  https://www.apache.org/licenses/LICENSE-2.0.txt
+;  - -- --- ---- -----
+
 SVAR event = EVENT_TRANSFER, EVENT_RELEASEFROMENDOWMENT, EVENT_CHANGERECOURSEPERIOD, EVENT_DELEGATE, EVENT_CREDITEAI, EVENT_LOCK, EVENT_NOTIFY, EVENT_SETREWARDSDESTINATION, EVENT_SETVALIDATION, EVENT_STAKE, EVENT_REGISTERNODE, EVENT_NOMINATENODEREWARD, EVENT_CLAIMNODEREWARD, EVENT_TRANSFERANDLOCK, EVENT_COMMANDVALIDATORCHANGE
 SVAR bpc = 111
 
