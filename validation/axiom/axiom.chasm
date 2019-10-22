@@ -11,7 +11,7 @@
 ; the BPC has no role in these operations but in its oversight role may change these validation rules if necessary.
 
 ; specs are as follows:
-; Permitted Transactions: ChangeValidation, ReleaseFromEndowment, RecordEndowmentNAV Transfer, TransferAndLock
+; Permitted Transactions: ChangeValidation, ReleaseFromEndowment, RecordEndowmentNAV Transfer, TransferAndLock, Issue
 ; Validation Keys: 3 Axiom Keys plus 9 BPC Keys
 ; Validation Rules:
 
@@ -19,9 +19,9 @@
 
 ;   RecordEndowmentNAV: 1 Axiom signature
 
-;   Transfer and TransferAndLock, ReleaseFromEndowment:
-;   - Up to 30,000 ndau: 1 Axiom signature
-;   - More than 30,000 ndau: 2 Axiom signatures
+;   Transfer and TransferAndLock, ReleaseFromEndowment, Issue:
+;   - <= 30,000 ndau: 1 Axiom signature
+;   - > 30,000 ndau: 2 Axiom signatures
 
 ; validation key ordering:
 ; 0 - Axiom A
@@ -129,7 +129,7 @@ handler EVENT_RECORDENDOWMENTNAV {
 ;    transaction
 ;    bitmask of which authorized keys were found in the signature list
 
-handler EVENT_RELEASEFROMENDOWMENT, EVENT_TRANSFER, EVENT_TRANSFERANDLOCK {
+handler EVENT_RELEASEFROMENDOWMENT, EVENT_TRANSFER, EVENT_TRANSFERANDLOCK, EVENT_ISSUE {
                                     ; number of sigs required
     BELOW_MIN = 1
     ABOVE_MIN = 2
