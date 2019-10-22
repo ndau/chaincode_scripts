@@ -1,24 +1,16 @@
 # Axiom
 
-## Axiom Foundation Release and Issuance
+## Axiom Foundation Endowment Account
 
-- Permitted Transactions: ChangeValidation, ReleaseFromEndowment, Transfer, TransferAndLock
-- Validation Keys: 4 ntrd Keys (indices `0`-`3`) plus 3 pre-BPC Keys (`4`-`6`)
+- Permitted Transactions: ChangeValidation, ReleaseFromEndowment, RecordEndowmentNAV, Transfer, TransferAndLock
+- Validation Keys: 3 Axiom keys and 9 BPC keys
 - Validation Rules:
 
-    - ChangeValidation: 1 of first 2 ntrd signatures and 1 of second 2 ntrd signatures, or 2 pre-BPC signatures
+    - ChangeValidation: 2 Axiom signatures and 3 BPC signatures, or 6 BPC signatures
+    - RecordEndowmentNAV: 1 Axiom signature
     - ReleaseFromEndowment:
-        - Up to 5,000 ndau: 1 of first 2 ntrd signatures
-        - >5,000 - 20,000 ndau: 1 of first 2 ntrd signatures and 1 of second 2 ntrd signatures
-        - More than 20,000 ndau: 1 of first 2 ntrd signatures and 1 of second 2 ntrd signatures and 1 of pre-BPC
+        - Up to 5,000 ndau: 1 Axiom signature
+        - More than 30,000 ndau: 2 Axiom signatures
     - Transfer and TransferAndLock:
-        - Up to 20,000 ndau: 1 of first 2 ntrd signatures
-        - More than 20,000 ndau: 1 of first 2 ntrd signatures and 1 of second 2 ntrd signatures
-
-## Operations
-
-- Permitted Transactions: All except Delegate and Lock
-- Validation Keys: 4 ntrd Keys
-- Validation Rules:
-    - ChangeValidation: 1 of first 2 signatures and 1 of second 2 signatures
-    - All others: 1 signature
+        - Up to 30,000 ndau: 1 Axiom signature
+        - More than 30,000 ndau: 2 Axiom signatures

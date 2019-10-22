@@ -1,0 +1,53 @@
+;  ----- ---- --- -- -
+;  Copyright 2019 Oneiro NA, Inc. All Rights Reserved.
+; 
+;  Licensed under the Apache License 2.0 (the "License").  You may not use
+;  this file except in compliance with the License.  You can obtain a copy
+;  in the file LICENSE in the source distribution or at
+;  https://www.apache.org/licenses/LICENSE-2.0.txt
+;  - -- --- ---- -----
+
+SVAR event = EVENT_RECORDENDOWMENTNAV
+
+BEGIN_TEMPLATE
+load ../axiom.chbin
+
+; - Permitted Transactions: RecordEndowmentNAV
+; - Validation Rules: One Axiom key (Axiom A, Axiom B, C)
+
+; Quantity does not matter - set to 1 ndau
+
+clear
+push 0
+push { TX_QUANTITY: nd1 }
+push 0b_01
+event $event
+run succeed
+
+clear
+push 0
+push { TX_QUANTITY: nd1 }
+push 0b_010
+event $event
+run succeed
+
+clear
+push 0
+push { TX_QUANTITY: nd1 }
+push 0b_0100
+event $event
+run succeed
+
+clear
+push 0
+push { TX_QUANTITY: nd1 }
+push 0b_01000
+event $event
+run fail
+
+clear
+push 0
+push { TX_QUANTITY: nd1 }
+push 0b_01001
+event $event
+run succeed

@@ -11,23 +11,22 @@
 ; the BPC has no role in these operations but in its oversight role may change these validation rules if necessary.
 
 ; specs are as follows:
-; Permitted Transactions: ChangeValidation, ReleaseFromEndowment, Transfer, TransferAndLock, Issue
+; Permitted Transactions: ChangeValidation, ReleaseFromEndowment, RecordEndowmentNAV Transfer, TransferAndLock, Issue
 ; Validation Keys: 3 Axiom Keys plus 9 BPC Keys
 ; Validation Rules:
+
 ;   ChangeValidation: 2 Axiom signatures and 3 BPC signatures, or 6 BPC signatures
 
-;   ReleaseFromEndowment:
-;   - Up to 30,000 ndau: 1 Axiom signature
-;   - More than 30,000 ndau: 2 Axiom signatures
+;   RecordEndowmentNAV: 1 Axiom signature
 
-;   Transfer and TransferAndLock, and Issue:
-;   - Up to 30,000 ndau: 1 Axiom signature
-;   - More than 30,000 ndau: 2 Axiom signatures
+;   Transfer and TransferAndLock, ReleaseFromEndowment, Issue:
+;   - <= 30,000 ndau: 1 Axiom signature
+;   - > 30,000 ndau: 2 Axiom signatures
 
 ; validation key ordering:
-; 0 - Axiom Group A, Sig a
-; 1 - Axiom Group A, Sig b
-; 2 - Axiom Group B, Sig a
+; 0 - Axiom A
+; 1 - Axiom B
+; 2 - Axiom C
 ; 3 - BPC A
 ; 4 - BPC B
 ; 5 - BPC C
@@ -47,10 +46,6 @@ handler EVENT_DEFAULT {
     fail
 }
 
-handler EVENT_ISSUE {
-    zero                            ; only one signature needed
-}
-
 ; For ChangeValidation, the rule is:
 ; (count(Axiom) >= 2 OR (count(BPC) >= 6)
 ; We start with the bpc because that lets us early-exit on the AND clause.
@@ -61,6 +56,7 @@ handler EVENT_ISSUE {
 ;    account
 ;    transaction
 ;    bitmask of which authorized keys were found in the signature list
+
 handler EVENT_CHANGEVALIDATION {
                                     ; number of sigs required
     AXIOM_MIN = 2
@@ -101,6 +97,26 @@ handler EVENT_CHANGEVALIDATION {
     zero                            ; a successful return is 0
 }
 
+; To record the endowment's NAV only one Axiom (not BPC) signature is required. This requirement
+; is less stringent than the others because it is reversible. A new NAV can be recorded at any time.
+; The signatures are checked against the Axiom mask and not the BPC mask.
+
+handler EVENT_RECORDENDOWMENTNAV {
+                                    ; stack top on right -- sig bitmask on top, then tx, then account
+                                    ;acct tx sigs
+                                    ; we never use acct or tx, so let's just get rid of 'em
+    tuck 2                          ;sigs acct tx
+    drop2                           ;sigs
+
+    push AXIOM_MASK                 ;sigs grpamask
+    and                             ;sigs_found
+    ifz
+        fail                        ;need any one or more sigs from Axiom group
+    endif
+
+    zero                            ; a successful return is 0
+}
+
 ; For ReleaseFromEndowment (RFE), Transfer, or Transfer and Lock, the rule is:
 ; * we always need 1 of Axiom
 ; * amt > 30000, need 2 of Axiom
@@ -113,7 +129,7 @@ handler EVENT_CHANGEVALIDATION {
 ;    transaction
 ;    bitmask of which authorized keys were found in the signature list
 
-handler EVENT_RELEASEFROMENDOWMENT, EVENT_TRANSFER, EVENT_TRANSFERANDLOCK {
+handler EVENT_RELEASEFROMENDOWMENT, EVENT_TRANSFER, EVENT_TRANSFERANDLOCK, EVENT_ISSUE {
                                     ; number of sigs required
     BELOW_MIN = 1
     ABOVE_MIN = 2
