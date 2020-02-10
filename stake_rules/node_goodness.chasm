@@ -90,48 +90,48 @@ handler EVENT_DEFAULT {
 
     roll 3                          ; age_bonus vote_history address account_data weighted_unscaled_stake total_delegation
     add                             ; age_bonus vote_history address account_data unscaled_weight
-    push NDAU_SCALE                 ; age_bonus vote_history address account_data unscaled_weight NDAU_SCALE
-    div                             ; age_bonus vote_history address account_data weight
-
-    roll 3                          ; age_bonus address account_data weight vote_history
+    roll 3                          ; age_bonus address account_data unscaled_weight vote_history
 
     ; calculate weight of voting history
     ; for each of the last HISTORY_SIZE rounds you get NON_VOTE_PENALTY if you didn't vote
     ; and you get BYZANTINE_PENALTY if you voted against consensus
 
-    deco non_vote_penalty VOTEDF    ; age_bonus address account_data weight vote_history
+    deco non_vote_penalty VOTEDF    ; age_bonus address account_data unscaled_weight vote_history
     deco byzantine_penalty BYZANTINEF; age_bonus address account_data weight vote_history
 
-    dup                             ; age_bonus address account_data weight vote_history vote_history
-    fieldl VOTEDF                   ; age_bonus address account_data weight vote_history non_vote_count_list
-    sum                             ; age_bonus address account_data weight vote_history non_vote_count
-    push NON_VOTE_PENALTY           ; age_bonus address account_data weight vote_history non_vote_count NON_VOTE_PENALTY
-    mul                             ; age_bonus address account_data weight vote_history non_vote_penalty
+    dup                             ; age_bonus address account_data unscaled_weight vote_history vote_history
+    fieldl VOTEDF                   ; age_bonus address account_data unscaled_weight vote_history non_vote_count_list
+    sum                             ; age_bonus address account_data unscaled_weight vote_history non_vote_count
+    push NON_VOTE_PENALTY           ; age_bonus address account_data unscaled_weight vote_history non_vote_count NON_VOTE_PENALTY
+    mul                             ; age_bonus address account_data unscaled_weight vote_history non_vote_penalty
 
-    swap                            ; age_bonus address account_data weight non_vote_penalty vote_history
-    fieldl BYZANTINEF               ; age_bonus address account_data weight non_vote_penalty byzantine_penalty_count_list
-    sum                             ; age_bonus address account_data weight non_vote_penalty byzantine_penalty_count          
-    push BYZANTINE_PENALTY          ; age_bonus address account_data weight non_vote_penalty byzantine_penalty_count BYZANTINE_PENALTY
-    mul                             ; age_bonus address account_data weight non_vote_penalty byzantine_penalty
+    swap                            ; age_bonus address account_data unscaled_weight non_vote_penalty vote_history
+    fieldl BYZANTINEF               ; age_bonus address account_data unscaled_weight non_vote_penalty byzantine_penalty_count_list
+    sum                             ; age_bonus address account_data unscaled_weight non_vote_penalty byzantine_penalty_count          
+    push BYZANTINE_PENALTY          ; age_bonus address account_data unscaled_weight non_vote_penalty byzantine_penalty_count BYZANTINE_PENALTY
+    mul                             ; age_bonus address account_data unscaled_weight non_vote_penalty byzantine_penalty
 
     ; add the penalties and subtract from MAXIMUM_PENALTY, then multiply by the weight
     ; i.e. you get points for NOT being penalized, so it acts as a multiplicative bonus
 
-    add                             ; age_bonus address account_data weight penalty
+    add                             ; age_bonus address account_data unscaled_weight penalty
     ; calculate the maximum possible penalty
-    push NON_VOTE_PENALTY           ; age_bonus address account_data weight penalty NON_VOTE_PENALTY
-    push BYZANTINE_PENALTY          ; age_bonus address account_data weight penalty NON_VOTE_PENALTY BYZANTINE_PENALTY
-    add                             ; age_bonus address account_data weight penalty penalty_sum
-    push HISTORY_SIZE               ; age_bonus address account_data weight penalty penalty_sum HISTORY_SIZE
-    mul                             ; age_bonus address account_data weight penalty maximum_penalty
-    swap                            ; age_bonus address account_data weight maximum_penalty penalty
-    sub                             ; age_bonus address account_data weight penalty_score
-    mul                             ; age_bonus address account_data penalized_weight
+    push NON_VOTE_PENALTY           ; age_bonus address account_data unscaled_weight penalty NON_VOTE_PENALTY
+    push BYZANTINE_PENALTY          ; age_bonus address account_data unscaled_weight penalty NON_VOTE_PENALTY BYZANTINE_PENALTY
+    add                             ; age_bonus address account_data unscaled_weight penalty penalty_sum
+    push HISTORY_SIZE               ; age_bonus address account_data unscaled_weight penalty penalty_sum HISTORY_SIZE
+    mul                             ; age_bonus address account_data unscaled_weight penalty maximum_penalty
+    swap                            ; age_bonus address account_data unscaled_weight maximum_penalty penalty
+    sub                             ; age_bonus address account_data unscaled_weight penalty_score
+    mul                             ; age_bonus address account_data penalized_unscaled_weight
 
     ; retrieve the age bonus
-                                    ; age_bonus address account_data penalized_weight
-    roll 3                          ; address account_data penalized_weight age_bonus
-    mul                             ; goodness
+                                    ; age_bonus address account_data penalized_unscaled_weight
+    roll 3                          ; address account_data penalized_unscaled_weight age_bonus
+    mul                             ; unscaled_goodness
+    push NDAU_SCALE                 ; age_bonus vote_history address account_data unscaled_goodness NDAU_SCALE
+    div                             ; age_bonus vote_history address account_data goodness
+
 }
 
 ; called via deco; therefore needs no args: it always gets a list entry
