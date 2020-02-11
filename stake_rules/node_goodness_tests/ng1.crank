@@ -1,0 +1,15 @@
+load ../node_goodness.chbin
+
+clear
+set-now 2020-02-11T01:55:26Z
+
+push 2019-08-21T19:53:01.965125Z           ; timestamp of most recent RegisterNode tx
+push [{120: 100, 121: true, 122: false}, {120: 100, 121: true, 122: false}, {120: 100, 121: true, 122: false}, {120: 100, 121: true, 122: false}, {120: 100, 121: true, 122: false}, {120: 100, 121: true, 122: false}, {120: 100, 121: true, 122: false}, {120: 100, 121: true, 122: false}, {120: 100, 121: true, 122: false}, {120: 100, 121: true, 122: false}, {120: 100, 121: true, 122: false}, {120: 100, 121: true, 122: false}, {120: 100, 121: true, 122: false}, {120: 573, 121: true, 122: false}, {120: 605, 121: true, 122: false}, {120: 452799, 121: true, 122: false}, {120: 452799, 121: true, 122: false}, {120: 452799, 121: true, 122: false}, {120: 452799, 121: true, 122: false}, {120: 452799, 121: true, 122: false}]
+push 1897   ; total delegation
+push "ndaq3nqhez3vvxn8rx4m6s6n3kv7k9js8i3xw8hqnwvi2ete"     ; node address 
+push {}     ; account data (not used)
+push 2000   ; total stake
+event 0     ; event
+
+run
+expect 452799
