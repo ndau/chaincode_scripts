@@ -1,0 +1,13 @@
+load ../node_goodness.chbin
+clear
+set-now 2020-02-11T12:20:58Z
+
+push 2019-08-21T19:53:01.965125Z
+push [{120: 100, 121: true, 122: false}, {120: 100, 121: true, 122: false}, {120: 100, 121: true, 122: false}, {120: 100, 121: true, 122: false}, {120: 100, 121: true, 122: false}, {120: 100, 121: true, 122: false}, {120: 100, 121: true, 122: false}, {120: 623, 121: true, 122: false}, {120: 658, 121: true, 122: false}, {120: 465740, 121: true, 122: false}, {120: 465740, 121: true, 122: false}, {120: 465740, 121: true, 122: false}, {120: 465740, 121: true, 122: false}, {120: 465740, 121: true, 122: false}, {120: 465740, 121: true, 122: false}, {120: 465740, 121: true, 122: false}, {120: 465740, 121: true, 122: false}, {120: 465740, 121: true, 122: false}, {120: 465740, 121: true, 122: false}, {120: 465740, 121: true, 122: false}]
+push 2237
+push "ndam75fnjn7cdues7ivi7ccfq8f534quieaccqibrvuzhqxa"
+push {}
+push 2000
+event 0
+run
+expect 465740
