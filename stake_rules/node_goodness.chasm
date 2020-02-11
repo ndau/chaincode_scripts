@@ -97,24 +97,20 @@ handler EVENT_DEFAULT {
     ; and you get BYZANTINE_PENALTY if you voted against consensus
 
     deco non_vote_penalty VOTEDF    ; age_bonus address account_data unscaled_weight vote_history
-    deco byzantine_penalty BYZANTINEF; age_bonus address account_data weight vote_history
+    deco byzantine_penalty BYZANTINEF; age_bonus address account_data unscaled_weight vote_history
 
     dup                             ; age_bonus address account_data unscaled_weight vote_history vote_history
-    fieldl VOTEDF                   ; age_bonus address account_data unscaled_weight vote_history non_vote_count_list
-    sum                             ; age_bonus address account_data unscaled_weight vote_history non_vote_count
-    push NON_VOTE_PENALTY           ; age_bonus address account_data unscaled_weight vote_history non_vote_count NON_VOTE_PENALTY
-    mul                             ; age_bonus address account_data unscaled_weight vote_history non_vote_penalty
+    fieldl VOTEDF                   ; age_bonus address account_data unscaled_weight vote_history non_vote_penalty_count_list
+    sum                             ; age_bonus address account_data unscaled_weight vote_history non_vote_penalty_count
 
     swap                            ; age_bonus address account_data unscaled_weight non_vote_penalty vote_history
     fieldl BYZANTINEF               ; age_bonus address account_data unscaled_weight non_vote_penalty byzantine_penalty_count_list
     sum                             ; age_bonus address account_data unscaled_weight non_vote_penalty byzantine_penalty_count          
-    push BYZANTINE_PENALTY          ; age_bonus address account_data unscaled_weight non_vote_penalty byzantine_penalty_count BYZANTINE_PENALTY
-    mul                             ; age_bonus address account_data unscaled_weight non_vote_penalty byzantine_penalty
+    add                             ; age_bonus address account_data unscaled_weight penalty
 
     ; add the penalties and subtract from MAXIMUM_PENALTY, then multiply by the weight
     ; i.e. you get points for NOT being penalized, so it acts as a multiplicative bonus
 
-    add                             ; age_bonus address account_data unscaled_weight penalty
     ; calculate the maximum possible penalty
     push NON_VOTE_PENALTY           ; age_bonus address account_data unscaled_weight penalty NON_VOTE_PENALTY
     push BYZANTINE_PENALTY          ; age_bonus address account_data unscaled_weight penalty NON_VOTE_PENALTY BYZANTINE_PENALTY
