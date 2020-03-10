@@ -49,7 +49,7 @@ BYZANTINEF = 124
 ; multiply stake weight by this value to increase its importance relative to delegation power
 STAKE_WEIGHT = 1
 
-; history size is defined at https://github.com/oneiro-ndev/metanode/blob/180b6970aaf3df5cdd2ba05607e5ca36e08f5d56/pkg/meta/state/vote_stats.go#L14
+; history size is defined at https://github.com/ndau/metanode/blob/180b6970aaf3df5cdd2ba05607e5ca36e08f5d56/pkg/meta/state/vote_stats.go#L14
 HISTORY_SIZE = 20
 
 ; don't change this

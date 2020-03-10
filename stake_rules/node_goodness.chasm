@@ -49,7 +49,7 @@ VOTEDF = 123
 BYZANTINEF = 124
 
 ; voting against consensus is a much larger penalty than failing to vote
-; history size is defined at https://github.com/oneiro-ndev/metanode/blob/180b6970aaf3df5cdd2ba05607e5ca36e08f5d56/pkg/meta/state/vote_stats.go#L14
+; history size is defined at https://github.com/ndau/metanode/blob/180b6970aaf3df5cdd2ba05607e5ca36e08f5d56/pkg/meta/state/vote_stats.go#L14
 HISTORY_SIZE = 20       ; see github link above - don't change this
 NON_VOTE_PENALTY = 1    ; small penalty for missing a vote
 BYZANTINE_PENALTY = 10  ; big penalty for voting against consensus
