@@ -128,7 +128,8 @@ handler EVENT_DEFAULT {
     ;; the full stack:
                                     ; age_bonus address account_data penalized_weight
     roll 3                          ; address account_data penalized_weight age_bonus
-    push RATE_DENOMINATOR           ; penalized_weight age_bonus RATE_DENOMINATOR
+    push 1000000                    ; 10^6, not 10^12
+;    push RATE_DENOMINATOR           ; penalized_weight age_bonus RATE_DENOMINATOR
     muldiv                          ; goodness
 }
 
