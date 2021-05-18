@@ -131,8 +131,12 @@ handler EVENT_DEFAULT {
     push GOODNESS_DENOMINATOR       ; address account_data penalized_weight scaled_age_bonus GOODNESS_DENOMINATOR
     muldiv                          ; address account_data goodness
 
-    ifz                             ; if total penalty is greater than maximum
-        one                         ; don't let voting power go all the way to 0
+; If the final goodness comes out to 0, set it to 1 so the node isn't
+; booted out of the validator set with no way to return.
+
+    dup                             ; address account_data goodness goodness
+    ifz                             ; address account_data goodness
+        one                         ; address account_data goodness 1
     endif
 }
 
