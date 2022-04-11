@@ -1,0 +1,145 @@
+;  ----- ---- --- -- -
+;  Copyright 2019, 2020 The Axiom Foundation. All Rights Reserved.
+; 
+;  Licensed under the Apache License 2.0 (the "License").  You may not use
+;  this file except in compliance with the License.  You can obtain a copy
+;  in the file LICENSE in the source distribution or at
+;  https://www.apache.org/licenses/LICENSE-2.0.txt
+;  - -- --- ---- -----
+
+
+; SIB calculation
+;
+; Stabilization Incentive Burn disincentivizes ndau sales when the market
+; price is below the target price. It does so by assuming that all transfers
+; within that period are sales, and adds extra fees to the seller. How much
+; fee? That's the point of this script.
+;
+; Expected stack at input:
+;
+;   TARGET PRICE (top)
+;   MARKET PRICE
+;    FLOOR PRICE
+;
+; These prices must be integers expressed with sufficient precision to accurately
+; determine proportionality. Expressing them as cents is sufficient precision
+; if the prices are denominated in dollars.
+;
+; Expected output:
+;
+;   RATE (int): a number which when divided by constants.RateDenominator
+;               results in a multiplier. This value will be multiplied by
+;               the tx qty and divided by constants.RateDenominator to
+;               produce the actual qty of SIB for that tx.
+;
+; The function implemented in this script has the following properties:
+; - if market price is greater than or equal to ACTIVATE_THRESHOLD% of target
+;   price, RATE is 0
+; - calculate RATE on the flat plane defined by the equation
+;
+;                       (TARGET PRICE * ACTIVATE_THRESHOLD) - MARKET_PRICE
+;        RATE =  CAP * ----------------------------------------------------
+;                       (TARGET PRICE * ACTIVATE_THRESHOLD) - FLOOR_PRICE
+;
+; - if RATE > 50%, cap RATE at 50%
+;
+; 2022-04-01 CHANGE TO SIB CALCULATION
+; ========== ====== == === ===========
+;
+; SIB is now calculated by taking the previous value of SIB calculated above
+; and increasing it using a new factor, gamma. Since this needs to be released
+; before a hard fork can change the parameters passed to this function (adding
+; gamma) it's hardcoded to use the 2022-04-01 value of 10. Change that value
+; and recompile for any future change in gamma.
+;
+; The previous value of SIB is calculated as above, with a cap of 50%. There is
+; no cap on the new value. At GAMMA = 10, SIB that was 50% is now 300%.
+;
+;   SIB = SIB * (1 + (GAMMA * SIB))
+
+GAMMA = 10
+ACTIVATE_THRESHOLD = 950000000000   ; rate
+CAP = 500000000000                  ; rate
+
+; don't change this
+RATE_DENOMINATOR = 1_000_000_000_000    ; 10^12
+RATE_TRUNCATE = 1_000_000               ; 10^6 (scale to prevent SIB^2 overflow)
+
+handler EVENT_DEFAULT {
+                                    ; floor market target
+    push ACTIVATE_THRESHOLD         ; floor market target ACTIVATE_THRESHOLD
+    push RATE_DENOMINATOR           ; floor market target ACTIVATE_THRESHOLD RATE_DENOMINATOR
+    muldiv                          ; floor market target_95 (95% of target price)
+    dup                             ; floor market target_95 target_95
+    pick 2                          ; floor market target_95 target_95 market
+    lt                              ; floor market target_95 (target_95 < market)
+    ifnz
+                                    ; if market >= target_95 (equiv: target_95 < market)
+        zero
+        ret
+    endif
+                                    ; floor market target_95
+    dup                             ; floor market target_95 target_95
+    tuck 2                          ; floor target_95 market target_95
+
+    ;; note: we are intentionally going to deviate from the rate formula, using
+    ;; an equivalent formula, in order to simplify the chaincode.
+    ;;
+    ;; the rate formula calls for (target_95-market)/(target_95-floor)
+    ;; we will instead implement (market-target-95)/(floor-target_95)
+    ;;
+    ;; reversing the order of the subtractions negates them.
+    ;; negating both the top and bottom of a division is a nop
+    ;; therefore we have not changed the result at all.
+
+    sub                             ; floor target_95 (market-target_95)
+    tuck 2                          ; (market-target_95) floor target_95
+    sub                             ; (market-target_95) (floor-target_95)
+
+    ;; push the rate denominator and muldiv, instead of dividing naively,
+    ;; to ensure that if the user input small numbers, they don't encounter
+    ;; too much precision loss
+    push RATE_DENOMINATOR           ; (market-target_95) (floor-target_95) RATE_DENOMINATOR
+    swap                            ; (market-target_95) RATE_DENOMINATOR (floor-target_95)
+    muldiv                          ; (RATE_DENOMINATOR * ((market-target_95)/(floor-target_95)))
+
+    ;; there's only one qty on the stack now; we're just going to call it frac
+    ;; in the debug notes, for conciseness
+    
+                                    ; frac
+    push CAP                        ; frac CAP
+    push RATE_DENOMINATOR           ; frac CAP RATE_DENOMINATOR
+    muldiv                          ; rate
+
+    ;; rate is expressed as an integer with implicit division by rate denominator
+
+    dup                             ; rate rate
+    push CAP                        ; rate rate CAP
+    gt                              ; rate (rate > CAP)
+    ifnz
+                                    ; rate
+        push CAP                    ; rate CAP
+        ret
+    endif
+                                    ; rate
+                             
+    ;; Now we can modify SIB using the new gamma value. First, scale it down by
+    ;; RATE_TRUNCATE, otherwise the last mul will overflow. The blockchain expects
+    ;; a percentage scaled to 10^12 (RATE_DENOMINATOR) - 12.34% is returned as
+    ;; 123456789012. Dividing the current rate by 10^6 (RATE_TRUNC) then squaring
+    ;; it will get us back to a 10^12 result.
+    ;;
+    ;; Since we're scaling everything up by RATE_TRUNC (in this code), we have to
+    ;; push that value when we're pushing "1" in the new SIB formula.
+
+    push RATE_TRUNCATE              ; rate RATE_TRUNCATE
+    div                             ; rate_trunc rate_trunc
+    dup                             ; rate_trunc rate_trunc
+    push GAMMA                      ; rate_trunc rate_trunc GAMMA
+    mul                             ; rate_trunc (rate_trunc*GAMMA)
+    push RATE_TRUNCATE              ; rate_trunc (rate_trunc*GAMMA) 1
+    add                             ; rate_trunc (1+(rate_trunc*GAMMA))
+    mul                             ; new rate
+
+    ;; just fall off the end here; we have the rate we want
+}

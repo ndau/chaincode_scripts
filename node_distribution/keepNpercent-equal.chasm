@@ -8,8 +8,10 @@
 ;  - -- --- ---- -----
 
 
-; this is a node operations distribution script that simply keeps all of
-; the node reward for itself (it returns an empty array of structs)
+; this is a node operations distribution script that keeps a percentage of
+; the node reward for itself and distributes the rest equally among all
+; co-stake events (i.e. one for each time an account has submitted a Stake
+; transaction to this node) regardless of the amount staked.
 
 ; stack:
 ;  (top) costakers (list of structs of account data decorated with address)
@@ -28,22 +30,23 @@
 ; this is the percentage of the total reward that should go to the node.
 ; the remainder is divided into equal parts and that amount is given to
 ; each co-staker.
+
 KEEP_PCT = 60
 ALLOCATE_FIELD = 10
 
 handler EVENT_DEFAULT {
-                                    ; costakers total node
-    swap                            ; total costakers node
-    push KEEP_PCT                   ; keep total costakers node
-    push 100                        ; 100 keep total costakers node
-    muldiv                          ; ( total * (keep/100) ) costakers node
-    over                            ; costakers total_distribution_amt costakers node
-    len                             ; ncostakers amt costakers node
-    swap                            ; amt ncostakers costakers node
-    div                             ; per_costaker costakers node
-    swap                            ; costakers per_costaker node
+                                    ; node total costakers
+    swap                            ; node costakers total
+    push KEEP_PCT                   ; node costakers total keep
+    push 100                        ; node costakers total keep 100
+    muldiv                          ; node costakers ( total * (keep / 100 ) )
+    over                            ; node costakers total_distribution_amt costakers
+    len                             ; node costakers total_distribution_amt ncostakers
+    swap                            ; node costakers ncostakers total_distribution_amt
+    div                             ; node costakers per_costaker
+    swap                            ; node per_costaker costakers
     deco PER_ACCT ALLOCATE_FIELD
-                                    ; decorated_costakers node
+                                    ; node decorated_costakers
                                     ; we're done
 }
 
